@@ -110,6 +110,7 @@ void USBHAL_initPorts(void)
 
 void USBHAL_initClocks(uint32_t mclkFreq)
 {
+#if 0
 	UCS_initClockSignal(
 	   UCS_FLLREF,
 	   UCS_REFOCLK_SELECT,
@@ -123,6 +124,26 @@ void USBHAL_initClocks(uint32_t mclkFreq)
     UCS_initFLLSettle(
         mclkFreq/1000,
         mclkFreq/32768);
+#endif
+
+    GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P5, GPIO_PIN2);
+    GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P5, GPIO_PIN3);
+
+    UCS_turnOnXT2(UCS_XT2_DRIVE_8MHZ_16MHZ);
+
+    UCS_initClockSignal(
+	   UCS_FLLREF,
+	   UCS_XT2CLK_SELECT,
+	   UCS_CLOCK_DIVIDER_12);
+
+	UCS_initClockSignal(
+	   UCS_ACLK,
+	   UCS_REFOCLK_SELECT,
+	   UCS_CLOCK_DIVIDER_1);
+
+    UCS_initFLLSettle(
+        mclkFreq/1000,
+        mclkFreq/1000000);
 
 }
 //Released_Version_5_00_01

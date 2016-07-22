@@ -44,13 +44,17 @@
  * ---------------------------------------------------------------------------*/
 #include <string.h>
 
+#include "tapif.h"
+
 #include "driverlib.h"
 
+#ifdef USB_SUPPORT
 #include "USB_config/descriptors.h"
 #include "USB_API/USB_Common/device.h"
 #include "USB_API/USB_Common/usb.h"                 // USB-specific functions
 #include "USB_API/USB_CDC_API/UsbCdc.h"
 #include "USB_app/usbConstructs.h"
+#endif	// USB_SUPPORT
 
 /*
  * NOTE: Modify hal.h to select a specific evaluation board and customize for
@@ -58,6 +62,7 @@
  */
 #include "hal.h"
 
+#ifdef USB_SUPPORT
 // Global flags set by events
 volatile uint8_t bCDCDataReceived_event = FALSE;  // Flag set by event handler to 
                                                // indicate data has been 
@@ -65,26 +70,35 @@ volatile uint8_t bCDCDataReceived_event = FALSE;  // Flag set by event handler t
 
 #define BUFFER_SIZE 256
 char dataBuffer[BUFFER_SIZE] = "";
-char nl[2] = "\n";
 uint16_t count;                    
 
+#endif	// USB_SUPPORT
 
 /*----------------------------------------------------------------------------+
  | Main Routine                                                                |
  +----------------------------------------------------------------------------*/
 void main (void)
 {
+#ifdef USB_SUPPORT
+	unsigned int	x;
+#endif	// USB_SUPPORT
+
     WDT_A_hold(WDT_A_BASE); // Stop watchdog timer
 
     // Minimum Vcore setting required for the USB API is PMM_CORE_LEVEL_2 .
-    PMM_setVCore(PMM_CORE_LEVEL_2);
+    PMM_setVCore(PMM_CORE_LEVEL_3);
 
     USBHAL_initPorts();           // Config GPIOS for low-power (output low)
-    USBHAL_initClocks(8000000);   // Config clocks. MCLK=SMCLK=FLL=8MHz; ACLK=REFO=32kHz
+    USBHAL_initClocks(25000000);   // Config clocks. MCLK=SMCLK=FLL=8MHz; ACLK=REFO=32kHz
+
+#ifdef USB_SUPPORT
     USB_setup(TRUE, TRUE); // Init USB & events; if a host is present, connect
+#endif	// USB_SUPPORT
 
     __enable_interrupt();  // Enable interrupts globally
+    init_tap();
 
+#ifdef USB_SUPPORT
     while (1)
     {
         uint8_t ReceiveError = 0, SendError = 0;
@@ -92,51 +106,44 @@ void main (void)
         
         // Check the USB state and directly main loop accordingly
         switch (USB_getConnectionState())
-        {
+        	{
             // This case is executed while your device is enumerated on the
             // USB host
-            case ST_ENUM_ACTIVE:
-            
-                // Sleep if there are no bytes to process.
-                __disable_interrupt();
-                if (!USBCDC_getBytesInUSBBuffer(CDC0_INTFNUM)) {
-                
-                    // Enter LPM0 until awakened by an event handler
-                    __bis_SR_register(LPM0_bits + GIE);
-                }
+        	case ST_ENUM_ACTIVE:
 
-                __enable_interrupt();
+        		// Scan TAP if there are no bytes to process.
+        		__disable_interrupt();
 
-                // Exit LPM because of a data-receive event, and
-                // fetch the received data
-                if (bCDCDataReceived_event){
-                
-                    // Clear flag early -- just in case execution breaks
-                    // below because of an error
-                    bCDCDataReceived_event = FALSE;
+        		while (USB_getConnectionState() == ST_ENUM_ACTIVE &&
+        				!USBCDC_getBytesInUSBBuffer(CDC0_INTFNUM))
+            		{
+        			__enable_interrupt();
+        			scan_tap();
+        			__disable_interrupt();
+            		}
 
-                    count = USBCDC_receiveDataInBuffer((uint8_t*)dataBuffer,
-                        BUFFER_SIZE,
-                        CDC0_INTFNUM);
+        		__enable_interrupt();
 
-                    // Count has the number of bytes received into dataBuffer
-                    // Echo back to the host.
-                    if (USBCDC_sendDataInBackground((uint8_t*)dataBuffer,
-                            count, CDC0_INTFNUM, 1)){
-                        // Exit if something went wrong.
-                        SendError = 0x01;
-                        break;
-                    }
-                }
+        		// Exit loop because of a data-receive event, and
+        		// fetch the received data
+            	if (bCDCDataReceived_event)
+            		{
+            		// Clear flag early -- just in case execution breaks
+            		// below because of an error
+            		bCDCDataReceived_event = FALSE;
+
+            		count = USBCDC_receiveDataInBuffer((uint8_t*)dataBuffer,
+            				BUFFER_SIZE,
+							CDC0_INTFNUM);
+
+            		// Accept packet data from USB
+               		for (x = 0; x < count; x++)
+               			receive_data_from_usb(dataBuffer[x]);
+            		}
                 break;
-                
-            // These cases are executed while your device is disconnected from
-            // the host (meaning, not enumerated); enumerated but suspended
-            // by the host, or connected to a powered hub without a USB host
-            // present.
-            case ST_PHYS_DISCONNECTED:
+
+            // Sleep if suspended
             case ST_ENUM_SUSPENDED:
-            case ST_PHYS_CONNECTED_NOENUM_SUSP:
                 __bis_SR_register(LPM3_bits + GIE);
                 _NOP();
                 break;
@@ -148,14 +155,29 @@ void main (void)
             // be LPM0 or active-CPU.
             case ST_ENUM_IN_PROGRESS:
             default:;
+
+            case ST_USB_CONNECTED_NO_ENUM:
+
+            // These cases are executed while your device is disconnected from
+            // the host (meaning, not enumerated);
+            // or connected to a powered hub without a USB host present.
+            case ST_PHYS_DISCONNECTED:
+            case ST_PHYS_CONNECTED_NOENUM_SUSP:
+            	scan_tap();
+            	break;
         }
 
         if (ReceiveError || SendError){
             // TO DO: User can place code here to handle error
         }
     }  //while(1)
+#else	// USB_SUPPORT
+    while (1)
+		scan_tap();
+#endif	// USB_SUPPORT
 }                               // main()
 
+#ifdef USB_SUPPORT
 /*  
  * ======== UNMI_ISR ========
  */
@@ -194,5 +216,6 @@ void __attribute__ ((interrupt(UNMI_VECTOR))) UNMI_ISR (void)
             USB_disable(); // Disable
     }
 }
+#endif	// USB_SUPPORT
 
 //Released_Version_5_00_01
