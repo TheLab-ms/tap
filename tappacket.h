@@ -33,6 +33,7 @@ extern "C"
 
 #define	TAP_TEXT_FLAG_NOSYNC			0x80
 #define	TAP_TEXT_FLAG_NOSCROLL			0x40
+#define	TAP_TEXT_FONT_MASK				0x01
 
 #define	LONGEST_TEXT					246
 #define	BIGGEST_PACKET					255

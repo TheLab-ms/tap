@@ -109,6 +109,7 @@ void create_split_text_fragment(
 		unsigned int		length2,
 		const unsigned char *s2);
 void prepare_to_scroll_text(text_fragment *fragment);
+void config_init(void);
 void init_ioports(void);
 void scan_LEDs(void);
 void initU5(void);
@@ -284,6 +285,85 @@ void save_state(void)
 }
 
 /*
+ ************ save_text ******************************************************
+ *
+ * Save text to flash memory
+ *
+ */
+text_fragment * save_text(channel *c)
+{
+	char			*flash_ptr;
+	text_fragment	*text_ptr;
+	unsigned int	text_length;
+	unsigned int	num_chars;
+
+	text_length = (peek_byte(c, 1) << 8) + peek_byte(c, 2) - 9;
+	if (text_length > 246)
+		{
+		// Cap the text length
+		text_length = 246;
+		if (peek_byte(c, 8) & TAP_TEXT_FONT_MASK)
+			// Two-byte chars
+			num_chars = 246 / 2;
+		else
+			num_chars = 246;
+		}
+	else
+		if (peek_byte(c, 8) & TAP_TEXT_FONT_MASK)
+			// Two-byte chars
+			num_chars = text_length / 2;
+		else
+			num_chars = text_length;
+
+	text_ptr = (text_fragment *)FLASH_INFO_C;
+
+	flash_ptr = (char *)FLASH_INFO_C;
+	FCTL3 = FWKEY;			// Clear Lock bit
+	FCTL1 = FWKEY+ERASE;	// Set Erase bit
+	*flash_ptr = 0;			// Dummy write to erase Flash seg
+
+	if (num_chars > 128 - 9)
+		{
+		// Too big to fit in only info segment C
+		flash_ptr = (char *)FLASH_INFO_B;
+		FCTL3 = FWKEY;			// Clear Lock bit
+		FCTL1 = FWKEY+ERASE;	// Set Erase bit
+		*flash_ptr = 0;			// Dummy write to erase Flash seg
+		}
+
+	FCTL1 = FWKEY+WRT;		// Set WRT bit for write operation
+
+	text_ptr->font_and_flags = peek_byte(c, 8) | NOT_DELETED;
+	text_ptr->red_intensity = peek_byte(c, 5);
+	text_ptr->green_intensity = peek_byte(c, 6);
+	text_ptr->blue_intensity = peek_byte(c, 7);
+	text_ptr->num_chars = num_chars;
+
+	if (contiguous_block_size(c) >= text_length + 9)
+		// The image is in one piece
+		memcpy(text_ptr->text, packet_address(c) + 9,
+				text_length);
+	else if (contiguous_block_size(c) <= 9)
+		// The packet is split but the text is not
+		memcpy(text_ptr->text, buffer_address(c) + 9 -
+				contiguous_block_size(c), text_length);
+	else
+		{
+		// The image is split by buffer wrap around
+		memcpy(text_ptr->text, packet_address(c) + 9,
+				contiguous_block_size(c) - 9);
+		memcpy(text_ptr->text + contiguous_block_size(c) - 9,
+				buffer_address(c),
+				text_length - (contiguous_block_size(c) - 9));
+		}
+
+	FCTL1 = FWKEY;			// Clear WRT bit
+	FCTL3 = FWKEY+LOCK;		// Set LOCK bit
+
+	return text_ptr;
+}
+
+/*
  ************ save_image *****************************************************
  *
  * Save image to flash memory
@@ -432,6 +512,9 @@ void process_packet(channel *c)
 					save_state();
 					}
 
+				// Initialize standard firmware versus demo
+				config_init();
+
 				break;
 
 			case TAP_PACKET_SET_BRIGHT_MODE:
@@ -505,6 +588,16 @@ void process_packet(channel *c)
 				// Indicate downloaded text
 				Marinara.flags = (Marinara.flags & ~DOWNLOADED_MASK) |
 						DOWNLOADED_TEXT;
+
+				if ((peek_byte(c, 0) & TAP_PACKET_FLAG_TEMPORARY) == 0)
+					{
+					// Save to flash
+					Burgermaster_shadow.flags =
+							(Burgermaster_shadow.flags & ~DOWNLOADED_MASK) |
+								DOWNLOADED_TEXT;
+					Burgermaster_shadow.data_address = (char *)save_text(c);
+					save_state();
+					}
 
 				// Display starting with the first character
 				prepare_to_scroll_text((text_fragment *)temp_text);
@@ -1088,6 +1181,64 @@ __interrupt void USCI_A1_ISR(void)
 		}
 }
 
+/*
+ ************ config_init ****************************************************
+ *
+ * Initialize standard firmware versus demo
+ *
+ */
+void config_init(void)
+{
+	if ((Marinara.flags & DOWNLOADED_MASK) == DOWNLOADED_IMAGE)
+		{
+		// Clear the display
+		fillRect(display_buffer, 0, 0, 8, 8, 0, 0, 0);
+
+		// Load saved image
+		load_image(display_buffer, (binary_image *)Marinara.data_address);
+
+		// Skip boot up color cycling display test
+		next_color = 5;
+		}
+	else if ((Marinara.flags & DOWNLOADED_MASK) == DOWNLOADED_TEXT)
+		{
+		// Set up to scroll  the text
+		start_scrolling_text((text_fragment *)Marinara.data_address);
+
+		// Skip boot up color cycling display test
+		next_color = 5;
+		}
+	else
+		{
+#ifdef DEMO
+
+		// Clear the display
+		fillRect(display_buffer, 0, 0, 8, 8, 0, 0, 0);
+
+		// Initialize the demo
+		setup();
+
+		// Skip boot up color cycling display test
+		next_color = 5;
+
+#else
+
+	if ((Marinara.flags & DOWNLOADED_MASK) == DOWNLOADED_NONE)
+		{
+		// Scroll our name after booting
+		unsigned int	txt_length;
+
+		txt_length = strlen((char *)our_name);
+		create_text_fragment(temp_text, 0, 0, FULL_INTENSITY, 0, txt_length,
+				our_name);
+		}
+
+		next_color = 0;
+
+#endif
+		}
+}
+
 //*********** init_tap *******************************************************
 void init_tap(void)
 {
@@ -1147,46 +1298,8 @@ void init_tap(void)
 	flush_channel(&x_out);
 	flush_channel(&y_out);
 
-	if ((Marinara.flags & DOWNLOADED_MASK) == DOWNLOADED_IMAGE)
-		{
-		// Clear the display
-		fillRect(display_buffer, 0, 0, 8, 8, 0, 0, 0);
-
-		// Load saved image
-		load_image(display_buffer, (binary_image *)Marinara.data_address);
-
-		// Skip boot up color cycling display test
-		next_color = 5;
-		}
-	else
-		{
-#ifdef DEMO
-
-		// Clear the display
-		fillRect(display_buffer, 0, 0, 8, 8, 0, 0, 0);
-
-		// Initialize the demo
-		setup();
-
-		// Skip boot up color cycling display test
-		next_color = 5;
-
-#else
-
-	if ((Marinara.flags & DOWNLOADED_MASK) == DOWNLOADED_NONE)
-		{
-		// Scroll our name after booting
-		unsigned int	txt_length;
-
-		txt_length = strlen((char *)our_name);
-		create_text_fragment(temp_text, 0, 0, FULL_INTENSITY, 0, txt_length,
-				our_name);
-		}
-
-		next_color = 0;
-
-#endif
-		}
+	// Initialize standard firmware versus demo
+	config_init();
 
 	// Enable interrupt on port 1 pin 0
 	P1IE |= BIT0;					// P1.0 interrupt enabled
