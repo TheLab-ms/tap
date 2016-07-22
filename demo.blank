@@ -1,0 +1,25 @@
+/*
+ * demo.blank
+ *
+ * This is a blank framework for creating a demo.
+ *
+ */
+
+#ifndef DEMO_H_
+#define DEMO_H_
+
+#define	DEMO
+
+void setup(void)
+{
+	// This code is invoked once to initialize the demo...
+
+}
+
+void loop(void)
+{
+	// This code is invoked once each time the LEDs are scanned...
+
+}
+
+#endif /* DEMO_H_ */

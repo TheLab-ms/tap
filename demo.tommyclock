@@ -1,0 +1,249 @@
+/*
+ * demo.tommyclock
+ *
+ * This demo is Tommy's clock.
+ *
+ */
+
+#ifndef DEMO_H_
+#define DEMO_H_
+
+#define	DEMO
+
+#define	HOLD_FRAMES	0	// 5
+
+int	numFrames;
+int	seconds;
+int	minutes;
+int	hours;
+int	pm;
+
+void setup(void)
+{
+	// This code is invoked once to initialize the demo...
+	numFrames = 0;
+	seconds = 0;
+	minutes = 0;
+	hours = 0;
+	pm = 0;
+}
+
+void loop(void)
+{
+	// This code is invoked once each time the LEDs are scanned...
+	int	i;
+
+	if (numFrames > 0)
+		{
+		// Hold current image for some frames
+		numFrames--;
+		return;
+		}
+	numFrames = HOLD_FRAMES;
+
+	// Clear the display
+	fillRect(display_buffer, 0, 0, 8, 8, 0, 0, 0);
+
+	// Blink center
+	if ((seconds & 1) != 0)
+		{
+		display_buffer[ROW3 + COL3 + RED] = FULL_INTENSITY;
+		display_buffer[ROW3 + COL4 + RED] = FULL_INTENSITY;
+		display_buffer[ROW4 + COL3 + RED] = FULL_INTENSITY;
+		display_buffer[ROW4 + COL4 + RED] = FULL_INTENSITY;
+		}
+
+	if (seconds <= 8)
+		{
+		for (i = 0; i < seconds; i++)
+			display_buffer[i * ROW_SIZE + COL7 + GREEN] = FULL_INTENSITY;
+		}
+	else if (seconds <= 15)
+		{
+		for (i = 0; i < 8; i++)
+			display_buffer[i * ROW_SIZE + COL7 + GREEN] = FULL_INTENSITY;
+		for (i = 0; i < seconds - 7; i++)
+			display_buffer[ROW7 + (7 - i) * COL_SIZE + GREEN] = FULL_INTENSITY;
+		}
+	else if (seconds <= 23)
+		{
+		for (i = 0; i < 8; i++)
+			display_buffer[i * ROW_SIZE + COL7 + GREEN] = FULL_INTENSITY;
+		for (i = 1; i < 8; i++)
+			display_buffer[ROW7 + (7 - i) * COL_SIZE + GREEN] = FULL_INTENSITY;
+		for (i = 0; i < seconds - 15; i++)
+			display_buffer[i * ROW_SIZE + COL7 + RED] = FULL_INTENSITY;
+		}
+	else if (seconds <= 30)
+		{
+		for (i = 0; i < 8; i++)
+			{
+			display_buffer[i * ROW_SIZE + COL7 + RED] = FULL_INTENSITY;
+			display_buffer[i * ROW_SIZE + COL7 + GREEN] = FULL_INTENSITY;
+			}
+		for (i = 1; i < 8; i++)
+			display_buffer[ROW7 + (7 - i) * COL_SIZE + GREEN] = FULL_INTENSITY;
+		for (i = 0; i < seconds - 23; i++)
+			display_buffer[ROW7 + (7 - i) * COL_SIZE + RED] = FULL_INTENSITY;
+		}
+	else if (seconds <= 38)
+		{
+		for (i = 0; i < 8; i++)
+			display_buffer[i * ROW_SIZE + COL7 + RED] = FULL_INTENSITY;
+		for (i = seconds - 30; i < 8; i++)
+			display_buffer[i * ROW_SIZE + COL7 + GREEN] = FULL_INTENSITY;
+		for (i = 1; i < 8; i++)
+			{
+			display_buffer[ROW7 + (7 - i) * COL_SIZE + RED] = FULL_INTENSITY;
+			display_buffer[ROW7 + (7 - i) * COL_SIZE + GREEN] = FULL_INTENSITY;
+			}
+		}
+	else if (seconds <= 45)
+		{
+		for (i = 0; i < 8; i++)
+			display_buffer[i * ROW_SIZE + COL7 + RED] = FULL_INTENSITY;
+		for (i = 1; i < 8; i++)
+			display_buffer[ROW7 + (7 - i) * COL_SIZE + RED] = FULL_INTENSITY;
+		for (i = 0; i <= 45 - seconds; i++)
+			display_buffer[ROW7 + i * COL_SIZE + GREEN] = FULL_INTENSITY;
+		}
+	else if (seconds <= 53)
+		{
+		for (i = seconds - 45; i < 8; i++)
+			display_buffer[i * ROW_SIZE + COL7 + RED] = FULL_INTENSITY;
+		for (i = 1; i < 8; i++)
+			display_buffer[ROW7 + (7 - i) * COL_SIZE + RED] = FULL_INTENSITY;
+		}
+	else
+		for (i = 0; i <= 60 - seconds; i++)
+			display_buffer[ROW7 + i * COL_SIZE + RED] = FULL_INTENSITY;
+
+	seconds++;
+	if (seconds > 59)
+		{
+		seconds = 0;
+		hours++;
+		if (hours > 11)
+			{
+			hours = 0;
+			if (pm == 0)
+				pm = 1;
+			else
+				pm = 0;
+			}
+		}
+
+	switch (hours)
+		{
+		case 0:
+			display_buffer[ROW0 + COL2 + RED] = FULL_INTENSITY;
+			display_buffer[ROW0 + COL4 + RED] = FULL_INTENSITY;
+			if (pm)
+				{
+				display_buffer[ROW0 + COL2 + GREEN] = FULL_INTENSITY;
+				display_buffer[ROW0 + COL4 + GREEN] = FULL_INTENSITY;
+				}
+			break;
+		case 1:
+			display_buffer[ROW0 + COL4 + RED] = FULL_INTENSITY;
+			display_buffer[ROW0 + COL6 + RED] = FULL_INTENSITY;
+			if (pm)
+				{
+				display_buffer[ROW0 + COL4 + GREEN] = FULL_INTENSITY;
+				display_buffer[ROW0 + COL6 + GREEN] = FULL_INTENSITY;
+				}
+			break;
+		case 2:
+			display_buffer[ROW0 + COL6 + RED] = FULL_INTENSITY;
+			display_buffer[ROW2 + COL6 + RED] = FULL_INTENSITY;
+			if (pm)
+				{
+				display_buffer[ROW0 + COL6 + GREEN] = FULL_INTENSITY;
+				display_buffer[ROW2 + COL6 + GREEN] = FULL_INTENSITY;
+				}
+			break;
+		case 3:
+			display_buffer[ROW2 + COL6 + RED] = FULL_INTENSITY;
+			display_buffer[ROW4 + COL6 + RED] = FULL_INTENSITY;
+			if (pm)
+				{
+				display_buffer[ROW2 + COL6 + GREEN] = FULL_INTENSITY;
+				display_buffer[ROW4 + COL6 + GREEN] = FULL_INTENSITY;
+				}
+			break;
+		case 4:
+			display_buffer[ROW4 + COL6 + RED] = FULL_INTENSITY;
+			display_buffer[ROW6 + COL6 + RED] = FULL_INTENSITY;
+			if (pm)
+				{
+				display_buffer[ROW4 + COL6 + GREEN] = FULL_INTENSITY;
+				display_buffer[ROW6 + COL6 + GREEN] = FULL_INTENSITY;
+				}
+			break;
+		case 5:
+			display_buffer[ROW6 + COL6 + RED] = FULL_INTENSITY;
+			display_buffer[ROW6 + COL4 + RED] = FULL_INTENSITY;
+			if (pm)
+				{
+				display_buffer[ROW6 + COL6 + GREEN] = FULL_INTENSITY;
+				display_buffer[ROW6 + COL4 + GREEN] = FULL_INTENSITY;
+				}
+			break;
+		case 6:
+			display_buffer[ROW6 + COL4 + RED] = FULL_INTENSITY;
+			display_buffer[ROW6 + COL2 + RED] = FULL_INTENSITY;
+			if (pm)
+				{
+				display_buffer[ROW6 + COL4 + GREEN] = FULL_INTENSITY;
+				display_buffer[ROW6 + COL2 + GREEN] = FULL_INTENSITY;
+				}
+			break;
+		case 7:
+			display_buffer[ROW6 + COL2 + RED] = FULL_INTENSITY;
+			display_buffer[ROW6 + COL0 + RED] = FULL_INTENSITY;
+			if (pm)
+				{
+				display_buffer[ROW6 + COL2 + GREEN] = FULL_INTENSITY;
+				display_buffer[ROW6 + COL0 + GREEN] = FULL_INTENSITY;
+				}
+			break;
+		case 8:
+			display_buffer[ROW6 + COL0 + RED] = FULL_INTENSITY;
+			display_buffer[ROW4 + COL0 + RED] = FULL_INTENSITY;
+			if (pm)
+				{
+				display_buffer[ROW6 + COL0 + GREEN] = FULL_INTENSITY;
+				display_buffer[ROW4 + COL0 + GREEN] = FULL_INTENSITY;
+				}
+			break;
+		case 9:
+			display_buffer[ROW4 + COL0 + RED] = FULL_INTENSITY;
+			display_buffer[ROW2 + COL0 + RED] = FULL_INTENSITY;
+			if (pm)
+				{
+				display_buffer[ROW4 + COL0 + GREEN] = FULL_INTENSITY;
+				display_buffer[ROW2 + COL0 + GREEN] = FULL_INTENSITY;
+				}
+			break;
+		case 10:
+			display_buffer[ROW2 + COL0 + RED] = FULL_INTENSITY;
+			display_buffer[ROW0 + COL0 + RED] = FULL_INTENSITY;
+			if (pm)
+				{
+				display_buffer[ROW2 + COL0 + GREEN] = FULL_INTENSITY;
+				display_buffer[ROW0 + COL0 + GREEN] = FULL_INTENSITY;
+				}
+			break;
+		case 11:
+			display_buffer[ROW0 + COL0 + RED] = FULL_INTENSITY;
+			display_buffer[ROW0 + COL2 + RED] = FULL_INTENSITY;
+			if (pm)
+				{
+				display_buffer[ROW0 + COL0 + GREEN] = FULL_INTENSITY;
+				display_buffer[ROW0 + COL2 + GREEN] = FULL_INTENSITY;
+				}
+			break;
+		}
+}
+
+#endif /* DEMO_H_ */

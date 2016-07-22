@@ -1,0 +1,60 @@
+/*
+ * demo.ExesAndOhs
+ *
+ * This demo cycles the display between an X and an O using two video buffers.
+ *
+ */
+
+#ifndef DEMO_H_
+#define DEMO_H_
+
+#define	DEMO
+
+#define	HOLD_FRAMES	30
+
+int	letter;
+int	numFrames;
+
+unsigned char	display_buffer2[8 * 8 * 3];
+
+void setup(void)
+{
+	// This code is invoked once to initialize the demo...
+	numFrames = 0;
+	letter = 1;
+
+	txt_red = 0;
+	txt_green = FULL_INTENSITY;
+	txt_blue = 0;
+	bg_red = 0;
+	bg_green = 0;
+	bg_blue = 0;
+
+	bltChar(display_buffer, find_glyph('X'), 0);
+	bltChar(display_buffer2, find_glyph('O'), 0);
+}
+
+void loop(void)
+{
+	// This code is invoked once each time the LEDs are scanned...
+	if (numFrames > 0)
+		{
+		// Hold current image for some frames
+		numFrames--;
+		return;
+		}
+	numFrames = HOLD_FRAMES;
+
+	// Go to next letter
+	if (letter >= 1)
+		letter = 0;
+	else
+		letter++;
+
+	if (letter == 0)
+		display_addr = display_buffer;
+	else
+		display_addr = display_buffer2;
+}
+
+#endif /* DEMO_H_ */

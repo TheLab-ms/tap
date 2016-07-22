@@ -1,0 +1,57 @@
+/*
+ * demo.RedWhiteAndBlue
+ *
+ * This demo cycles the display between red, white and blue.
+ *
+ */
+
+#ifndef DEMO_H_
+#define DEMO_H_
+
+#define	DEMO
+
+#define	HOLD_FRAMES	30
+
+int	color;
+int	numFrames;
+
+void setup(void)
+{
+	// This code is invoked once to initialize the demo...
+	numFrames = 0;
+	color = 3;
+}
+
+void loop(void)
+{
+	// This code is invoked once each time the LEDs are scanned...
+	if (numFrames > 0)
+		{
+		// Hold current image for some frames
+		numFrames--;
+		return;
+		}
+	numFrames = HOLD_FRAMES;
+
+	// Go to next color
+	if (color >= 2)
+		color = 0;
+	else
+		color++;
+
+	switch (color)
+		{
+		case 0:	// Red
+			fillRect(display_addr, 0, 0, 8, 8, FULL_INTENSITY, 0, 0);
+			break;
+		case 1:	// White
+			fillRect(display_addr, 0, 0, 8, 8, FULL_INTENSITY,
+					FULL_INTENSITY, FULL_INTENSITY);
+			break;
+		case 2:	// Blue
+			fillRect(display_addr, 0, 0, 8, 8, 0, 0, FULL_INTENSITY);
+			break;
+		}
+}
+
+#endif /* DEMO_H_ */
