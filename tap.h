@@ -47,13 +47,13 @@ typedef struct burgermaster
 
 typedef struct text_fragment
 {
-	unsigned char	font_and_flags;
-	unsigned char	red_intensity;
-	unsigned char	green_intensity;
-	unsigned char	blue_intensity;
-	char			*next_address;
-	unsigned char	num_chars;
-	unsigned char	text[0];
+	unsigned char			font_and_flags;
+	unsigned char			red_intensity;
+	unsigned char			green_intensity;
+	unsigned char			blue_intensity;
+	struct text_fragment	*next_address;
+	unsigned char			num_chars;
+	unsigned char			text[0];
 
 } text_fragment;
 

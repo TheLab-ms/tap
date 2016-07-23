@@ -494,6 +494,13 @@ void process_packet(channel *c)
 	unsigned int	packet_length;
 
 	packet_length = (peek_byte(c, 1) << 8) + peek_byte(c, 2);
+	if (packet_length > BIGGEST_PACKET)
+		{
+		// No way for this to work out well, so just punt
+		flush_channel(c);
+		return;
+		}
+
 	if ((peek_byte(c, 0) & TAP_PACKET_FLAG_BROADCAST) ||
 			(Marinara.flags & ID_ASSIGNED) == 0 ||
 			(peek_byte(c, 3) == Marinara.x_address) &&
@@ -918,7 +925,7 @@ void create_text_fragment(
 	txt->red_intensity = red;
 	txt->green_intensity = green;
 	txt->blue_intensity = blue;
-	txt->next_address = (char *)0xFFFF;
+	txt->next_address = (text_fragment *)0xFFFF;
 }
 
 /*
@@ -961,7 +968,7 @@ void create_split_text_fragment(
 	txt->red_intensity = red;
 	txt->green_intensity = green;
 	txt->blue_intensity = blue;
-	txt->next_address = (char *)0xFFFF;
+	txt->next_address = (text_fragment *)0xFFFF;
 }
 
 /*
@@ -1066,10 +1073,16 @@ void scroll_text(void)
 		if (first_char)
 			ch = *current_char;
 		else
-			if (current_char == last_char)
-				ch = ' ';
-			else
+			if (current_char < last_char)
+				// Use next character in the same fragment
 				ch = *(current_char + 1);
+			else
+				if (current_fragment->next_address != (text_fragment *)0xFFFF)
+					// Use first character of the next fragment
+					ch = current_fragment->next_address->text[0];
+				else
+					// Scroll in the dummy space for a repeat
+					ch = ' ';
 		bltChar(display_addr, find_glyph(ch), 8 - offset);
 		}
 
@@ -1095,14 +1108,27 @@ void scroll_text(void)
 				}
 			}
 		else
-			if (current_char >= last_char)
-				{
-				// Start over with the string
-				first_char = 1;
-				current_char = first_fragment->text;
-				}
-			else
+			if (current_char < last_char)
+				// Go to the next character in this fragment
 				current_char++;
+			else
+				{
+				if (current_fragment->next_address != (text_fragment *)0xFFFF)
+					// Go to the first character of the next fragment
+					current_fragment = current_fragment->next_address;
+				else
+					{
+					// No more fragments, start over with the first fragment
+					first_char = 1;
+					current_fragment = first_fragment;
+					}
+
+				txt_red = current_fragment->red_intensity;
+				txt_green = current_fragment->green_intensity;
+				txt_blue = current_fragment->blue_intensity;
+				current_char = current_fragment->text;
+				last_char = current_char + current_fragment->num_chars - 1;
+				}
 		}
 }
 
@@ -1223,15 +1249,12 @@ void config_init(void)
 
 #else
 
-	if ((Marinara.flags & DOWNLOADED_MASK) == DOWNLOADED_NONE)
-		{
-		// Scroll our name after booting
-		unsigned int	txt_length;
-
-		txt_length = strlen((char *)our_name);
-		create_text_fragment(temp_text, 0, 0, FULL_INTENSITY, 0, txt_length,
-				our_name);
-		}
+		if ((Marinara.flags & DOWNLOADED_MASK) == DOWNLOADED_NONE)
+			{
+			// Nothing downloaded, scroll our name after booting
+			create_text_fragment(temp_text, 0, 0, FULL_INTENSITY,
+					strlen((char *)our_name), our_name);
+			}
 
 		next_color = 0;
 
