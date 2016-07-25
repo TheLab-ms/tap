@@ -13,12 +13,9 @@
 //***********  Standard firmware  ********************************************
 //
 // The standard firmware lights all of the red then green then blue and
-// finally white LEDs upon power up, then scrolls our name.
+// finally all LEDs upon power up, then scrolls our name.
 //
 
-// ***
-// Below spells out T h e L a b . m s (space) in unicode HEX
-// ***
 const unsigned char our_name[] = "TheLab.ms";
 
 #define	BOOT_FRAMES	60		/* Number of frames to hold each boot color */
@@ -52,7 +49,7 @@ typedef struct channel
 channel	serial_x;
 channel	serial_y;
 
-#ifdef PHOTOCELL_SUPPORT
+#ifdef PHOTO_SUPPORT
 channel	photo;
 #endif
 
@@ -492,6 +489,7 @@ void process_packet(channel *c)
 {
 	unsigned int	image_length;
 	unsigned int	packet_length;
+	text_fragment	*text;
 
 	packet_length = (peek_byte(c, 1) << 8) + peek_byte(c, 2);
 	if (packet_length > BIGGEST_PACKET)
@@ -501,7 +499,7 @@ void process_packet(channel *c)
 		return;
 		}
 
-	if ((peek_byte(c, 0) & TAP_PACKET_FLAG_BROADCAST) ||
+	if ((peek_byte(c, 0) & TAP_PACKET_FLAG_IGNOREADDRESS) ||
 			(Marinara.flags & ID_ASSIGNED) == 0 ||
 			(peek_byte(c, 3) == Marinara.x_address) &&
 			(peek_byte(c, 4) == Marinara.y_address))
@@ -572,26 +570,6 @@ void process_packet(channel *c)
 			case TAP_PACKET_TEXT_STRING:
 				// Text string packet
 
-				if (contiguous_block_size(c) >= packet_length)
-					// The packet is in one piece
-					create_text_fragment(temp_text, peek_byte(c, 8),
-							peek_byte(c, 5), peek_byte(c, 6), peek_byte(c, 7),
-							packet_length - 9, packet_address(c) + 9);
-				else if (contiguous_block_size(c) <= 9)
-					// The packet is split but the string is not
-					create_text_fragment(temp_text, peek_byte(c, 8),
-							peek_byte(c, 5), peek_byte(c, 6), peek_byte(c, 7),
-							packet_length - 9, buffer_address(c) + 9 -
-								contiguous_block_size(c));
-				else
-					// The string is split by buffer wrap around
-					create_split_text_fragment(temp_text, peek_byte(c, 8),
-							peek_byte(c, 5), peek_byte(c, 6), peek_byte(c, 7),
-							contiguous_block_size(c) - 9,
-							packet_address(c) + 9,
-							packet_length - contiguous_block_size(c),
-							buffer_address(c));
-
 				// Indicate downloaded text
 				Marinara.flags = (Marinara.flags & ~DOWNLOADED_MASK) |
 						DOWNLOADED_TEXT;
@@ -602,8 +580,36 @@ void process_packet(channel *c)
 					Burgermaster_shadow.flags =
 							(Burgermaster_shadow.flags & ~DOWNLOADED_MASK) |
 								DOWNLOADED_TEXT;
-					Burgermaster_shadow.data_address = (char *)save_text(c);
+					text = save_text(c);
+					Burgermaster_shadow.data_address = (char *)text;
 					save_state();
+					}
+				else
+					{
+					// Create a temporary text fragment in RAM
+					if (contiguous_block_size(c) >= packet_length)
+						// The packet is in one piece
+						create_text_fragment(temp_text, peek_byte(c, 8),
+								peek_byte(c, 5), peek_byte(c, 6),
+								peek_byte(c, 7),
+								packet_length - 9, packet_address(c) + 9);
+					else if (contiguous_block_size(c) <= 9)
+						// The packet is split but the string is not
+						create_text_fragment(temp_text, peek_byte(c, 8),
+								peek_byte(c, 5), peek_byte(c, 6),
+								peek_byte(c, 7),
+								packet_length - 9, buffer_address(c) + 9 -
+									contiguous_block_size(c));
+					else
+						// The string is split by buffer wrap around
+						create_split_text_fragment(temp_text, peek_byte(c, 8),
+								peek_byte(c, 5), peek_byte(c, 6),
+								peek_byte(c, 7),
+								contiguous_block_size(c) - 9,
+								packet_address(c) + 9,
+								packet_length - contiguous_block_size(c),
+								buffer_address(c));
+					text = (text_fragment *)temp_text;
 					}
 
 				// Display starting with the first character
@@ -739,13 +745,13 @@ void process_packets(void)
 			Done = 0;
 			}
 
-#ifdef PHOTOCELL_SUPPORT
+#ifdef PHOTO_SUPPORT
 		if (packet_complete(&photo))
 			{
 			process_packet(&photo);
 			Done = 0;
 			}
-#endif	// PHOTOCELL_SUPPORT
+#endif	// PHOTO_SUPPORT
 		}
 }
 
@@ -985,6 +991,24 @@ const unsigned char * find_glyph(unsigned int ch)
 }
 
 /*
+ ************ find_next_text_fragment ****************************************
+ *
+ * Find next non-empty text fragment
+ *
+ * fragment = the first text fragment of a list to try
+ *
+ * returns the address of the non-empty fragment or 0xFFFF if none
+ *
+ */
+text_fragment * find_next_text_fragment(text_fragment *fragment)
+{
+	while (fragment != (text_fragment *)0xFFFF && fragment->num_chars == 0)
+		fragment = fragment->next_address;
+
+	return fragment;
+}
+
+/*
  ************ prepare_to_scroll_text *****************************************
  *
  * Set up for scrolling text
@@ -994,6 +1018,16 @@ const unsigned char * find_glyph(unsigned int ch)
  */
 void prepare_to_scroll_text(text_fragment *fragment)
 {
+	fragment = find_next_text_fragment(fragment);
+	if (fragment == (text_fragment *)0xFFFF)
+		{
+		// No text, display a single blinking red '?'
+		create_text_fragment(temp_text, TAP_TEXT_FLAG_NOSCROLL,
+				FULL_INTENSITY, 0, 0,
+				1, "?");
+		fragment = (text_fragment *)temp_text;
+		}
+
 	first_fragment = fragment;
 	current_fragment = fragment;
 
@@ -1056,9 +1090,12 @@ void start_scrolling_text(text_fragment *fragment)
 void scroll_text(void)
 {
 	unsigned char	ch;
+	int				color_changed;
+	text_fragment	*next;
 
 	// Clear video buffer
 	fillRect(display_addr, 0, 0, 8, 8, 0, 0, 0);
+	color_changed = 0;
 
 	if (first_char)
 		// Fake a leading space to scroll first char onto
@@ -1077,13 +1114,30 @@ void scroll_text(void)
 				// Use next character in the same fragment
 				ch = *(current_char + 1);
 			else
-				if (current_fragment->next_address != (text_fragment *)0xFFFF)
+				{
+				next = find_next_text_fragment(current_fragment->next_address);
+				if (next != (text_fragment *)0xFFFF)
+					{
 					// Use first character of the next fragment
-					ch = current_fragment->next_address->text[0];
+					ch = next->text[0];
+
+					txt_red = next->red_intensity;
+					txt_green = next->green_intensity;
+					txt_blue = next->blue_intensity;
+					color_changed = 1;
+					}
 				else
 					// Scroll in the dummy space for a repeat
 					ch = ' ';
+				}
 		bltChar(display_addr, find_glyph(ch), 8 - offset);
+		if (color_changed)
+			{
+			txt_red = current_fragment->red_intensity;
+			txt_green = current_fragment->green_intensity;
+			txt_blue = current_fragment->blue_intensity;
+			color_changed = 0;
+			}
 		}
 
 	if (offset < 7 &&
@@ -1113,9 +1167,10 @@ void scroll_text(void)
 				current_char++;
 			else
 				{
-				if (current_fragment->next_address != (text_fragment *)0xFFFF)
+				next = find_next_text_fragment(current_fragment->next_address);
+				if (next != (text_fragment *)0xFFFF)
 					// Go to the first character of the next fragment
-					current_fragment = current_fragment->next_address;
+					current_fragment = next;
 				else
 					{
 					// No more fragments, start over with the first fragment
@@ -1252,7 +1307,7 @@ void config_init(void)
 		if ((Marinara.flags & DOWNLOADED_MASK) == DOWNLOADED_NONE)
 			{
 			// Nothing downloaded, scroll our name after booting
-			create_text_fragment(temp_text, 0, 0, FULL_INTENSITY,
+			create_text_fragment(temp_text, 0, 0, FULL_INTENSITY, 0,
 					strlen((char *)our_name), our_name);
 			}
 
@@ -1310,7 +1365,7 @@ void init_tap(void)
 	flush_channel(&serial_x);
 	flush_channel(&serial_y);
 
-	#ifdef PHOTOCELL_SUPPORT
+	#ifdef PHOTO_SUPPORT
 	flush_channel(&photo);
 	#endif
 

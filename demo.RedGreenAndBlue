@@ -10,6 +10,8 @@
 
 #define	DEMO
 
+int	first_time;
+
 void setup(void)
 {
 	// This code is invoked once to initialize the demo...
@@ -19,23 +21,28 @@ void setup(void)
 			strlen("Red"), "Red");
 
 	create_text_fragment(temp_text + 20, 0, 0, FULL_INTENSITY, 0,
-			strlen(" Green"), " Green");
+			strlen("Green"), "Green");
 	txt = (text_fragment *)temp_text;
 	txt->next_address = (text_fragment *)(temp_text + 20);
 
 	create_text_fragment(temp_text + 40, 0, 0, 0, FULL_INTENSITY,
-			strlen(" Blue"), " Blue");
+			strlen("Blue"), "Blue");
 	txt = (text_fragment *)(temp_text + 20);
 	txt->next_address = (text_fragment *)(temp_text + 40);
 
-	// Transition to scrolling text
-	start_scrolling_text((text_fragment *)temp_text);
+	first_time = 1;
 }
 
 void loop(void)
 {
 	// This code is invoked once each time the LEDs are scanned...
+	if (first_time)
+		{
+		// Transition to scrolling text
+		start_scrolling_text((text_fragment *)temp_text);
 
+		first_time = 0;
+		}
 }
 
 #endif /* DEMO_H_ */

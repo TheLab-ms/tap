@@ -17,9 +17,9 @@ extern "C"
 {
 #endif
 
-#define	FRAME_RATE_TEST		/* Define to toggle pin 6.2 for each frame */
+#define	FRAME_RATE_TEST	/* Define to toggle pin 6.2 for each frame */
 
-#define	PHOTOCELL_SUPPORT	/* Define to include photocell input support */
+#define	PHOTO_SUPPORT	/* Define to include phototransistor input support */
 
 //********  Downloaded Data Definitions  *************************************
 typedef struct burgermaster
