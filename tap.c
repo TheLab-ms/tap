@@ -33,6 +33,8 @@ unsigned char	*display_addr = display_buffer;
 unsigned int	loops;
 unsigned int	next_color;
 
+volatile unsigned int	LRN_mode_triggered;
+
 //***********  Communication channels  ***************************************
 
 #define	BUFFER_SIZE	256		/* power of 2 for best performance */
@@ -478,6 +480,51 @@ void uart_putsY(const unsigned char *str)
 }
 
 /*
+ ************ set_id *********************************************************
+ *
+ * Set my ID
+ *
+ * x = X address
+ * y = Y address
+ * flags = flags to propagate, like temporary
+ *
+ */
+void set_id(int x, int y, int flags)
+{
+	Marinara.flags |= ID_ASSIGNED;
+	Marinara.x_address = x;
+	Marinara.y_address = y;
+
+	if ((flags & TAP_PACKET_FLAG_TEMPORARY) == 0)
+		{
+		// Save to flash
+		Burgermaster_shadow.flags |= ID_ASSIGNED;
+		Burgermaster_shadow.x_address = x;
+		Burgermaster_shadow.y_address = y;
+		save_state();
+		}
+
+	// Propagate downstream
+	uart_putcX(TAP_PACKET_SET_ID |
+			TAP_PACKET_FLAG_IGNOREADDRESS |
+			TAP_PACKET_FLAG_NOFORWARD |
+			flags & TAP_PACKET_FLAG_TEMPORARY);
+	uart_putcX(0);
+	uart_putcX(5);
+	uart_putcX(x + 1);
+	uart_putcX(y);
+
+	uart_putcY(TAP_PACKET_SET_ID |
+			TAP_PACKET_FLAG_IGNOREADDRESS |
+			TAP_PACKET_FLAG_NOFORWARD |
+			flags & TAP_PACKET_FLAG_TEMPORARY);
+	uart_putcY(0);
+	uart_putcY(5);
+	uart_putcY(x);
+	uart_putcY(y + 1);
+}
+
+/*
  ************ process_packet *************************************************
  *
  * Process a data packet
@@ -550,20 +597,7 @@ void process_packet(channel *c)
 
 			case TAP_PACKET_SET_ID:
 
-				Marinara.flags |= ID_ASSIGNED;
-				Marinara.x_address = peek_byte(c, 3);
-				Marinara.y_address = peek_byte(c, 4);
-
-				if ((peek_byte(c, 0) & TAP_PACKET_FLAG_TEMPORARY) == 0)
-					{
-					// Save to flash
-					Burgermaster_shadow.flags |= ID_ASSIGNED;
-					Burgermaster_shadow.x_address = peek_byte(c, 3);
-					Burgermaster_shadow.y_address = peek_byte(c, 4);
-					save_state();
-					}
-
-				// Propagate downstream
+				set_id(peek_byte(c, 3), peek_byte(c, 4), peek_byte(c, 0));
 
 				break;
 
@@ -718,6 +752,14 @@ void process_packet(channel *c)
 void process_packets(void)
 {
 	unsigned int	Done;
+
+	if (LRN_mode_triggered)
+		{
+		LRN_mode_triggered = 0;
+
+		// Set my ID to (0, 0)
+		set_id(0, 0, 0);
+		}
 
 	Done = 0;
 
@@ -1213,7 +1255,14 @@ void receive_data_from_usb(unsigned char b)
 #pragma vector=PORT1_VECTOR
 __interrupt void Port_1(void)
 {
-	P1IFG &= ~BIT0; // P1.0 IFG cleared
+	if (P1IFG & BIT1)
+		{
+		// Clear interrupt
+		P1IFG &= ~BIT1;
+
+		// Trigger LRN mode
+		LRN_mode_triggered = 1;
+		}
 }
 
 /*
@@ -1379,10 +1428,11 @@ void init_tap(void)
 	// Initialize standard firmware versus demo
 	config_init();
 
-	// Enable interrupt on port 1 pin 0
-	P1IE |= BIT0;					// P1.0 interrupt enabled
-	P1IES |= BIT0;					// P1.0 Hi/lo edge
-	P1IFG &= ~BIT0;					// P1.0 IFG cleared
+	// Enable interrupt on port 1 pin 1
+	P1IE |= BIT1;					// P1.0 interrupt enabled
+	P1IES |= BIT1;					// P1.0 Hi/lo edge
+	P1IFG &= ~BIT1;					// P1.0 IFG cleared
+	LRN_mode_triggered = 0;
 
 	__bis_SR_register(GIE);			// Enable global interrupts
 
@@ -1808,6 +1858,8 @@ void initU5()
 //*********** init_ioports ***************************************************
 void init_ioports()
 {
+	P1DIR &= ~BIT1;
+
 	PJDIR |= BIT3;
 	PJOUT |= BIT2;
 	PJDIR |= BIT2;
