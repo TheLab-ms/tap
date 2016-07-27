@@ -872,6 +872,7 @@ void fillRect(unsigned char *buffer,
  * buffer = the address of the display buffer
  * glyph = the bits for the character
  * origin = origin column of the character
+ * clear_background = 0 if background color is rendered
  *
  * Globals
  * txt_red = foreground red intensity
@@ -882,7 +883,8 @@ void fillRect(unsigned char *buffer,
  * bg_blue = background blue intensity
  *
  */
-void bltChar(unsigned char *buffer, const unsigned char *glyph, int origin)
+void bltChar(unsigned char *buffer, const unsigned char *glyph, int origin,
+		int clear_background)
 {
 	unsigned int	row;
 	unsigned int	col;
@@ -922,12 +924,16 @@ void bltChar(unsigned char *buffer, const unsigned char *glyph, int origin)
 				*buffer++ = txt_blue;
 				}
 			else
-				{
-				// Pixel is background color
-				*buffer++ = bg_red;
-				*buffer++ = bg_green;
-				*buffer++ = bg_blue;
-				}
+				if (clear_background == 0)
+					{
+					// Pixel is background color
+					*buffer++ = bg_red;
+					*buffer++ = bg_green;
+					*buffer++ = bg_blue;
+					}
+				else
+					// Advance past clear pixels
+					buffer = buffer + 3;
 
 			glyph_row = glyph_row >> 1;
 			}
@@ -1145,7 +1151,7 @@ void scroll_text(void)
 	else
 		ch = *current_char;
 
-	bltChar(display_addr, find_glyph(ch), -offset);
+	bltChar(display_addr, find_glyph(ch), -offset, 0);
 	if (offset > 0)
 		{
 		// Do part of the next character, if there is one
@@ -1172,7 +1178,7 @@ void scroll_text(void)
 					// Scroll in the dummy space for a repeat
 					ch = ' ';
 				}
-		bltChar(display_addr, find_glyph(ch), 8 - offset);
+		bltChar(display_addr, find_glyph(ch), 8 - offset, 0);
 		if (color_changed)
 			{
 			txt_red = current_fragment->red_intensity;

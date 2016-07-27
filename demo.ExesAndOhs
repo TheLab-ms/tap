@@ -30,8 +30,8 @@ void setup(void)
 	bg_green = 0;
 	bg_blue = 0;
 
-	bltChar(display_buffer, find_glyph('X'), 0);
-	bltChar(display_buffer2, find_glyph('O'), 0);
+	bltChar(display_buffer, find_glyph('X'), 0, 0);
+	bltChar(display_buffer2, find_glyph('O'), 0, 0);
 }
 
 void loop(void)

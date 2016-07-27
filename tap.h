@@ -82,7 +82,10 @@ typedef struct binary_image
 #define	LOW_POWER_DELAY	3	/* Cycles for individual LED ON delay */
 #define	BRIGHT_DELAY	15	/* Adjust when MAX_DELAY is changed */
 
-#define	FULL_INTENSITY	MAX_DELAY
+#define	FULL_INTENSITY		MAX_DELAY
+#define	HALF_INTENSITY		(FULL_INTENSITY / 2)
+#define	QUARTER_INTENSITY	(HALF_INTENSITY / 2)
+#define	EIGHTH_INTENSITY	(QUARTER_INTENSITY / 2)
 
 //*********** For direct access to the display buffer ************************
 #define	RED			0

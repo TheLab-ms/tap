@@ -49,21 +49,10 @@ const unsigned char	x[10][8] =
 			{ 0x00, 0x00, 0x00, 0x40, 0xA0, 0xC0, 0x80, 0x40 }	// '9'
 	};
 
-void implant(const unsigned char *next)
-{
-	int	i;
-
-	for (i = 0; i < 8; i++)
-		final[i] = final[i] | next[i];
-}
-
 void setup(void)
 {
 	// This code is invoked once to initialize the demo...
 
-	txt_red = FULL_INTENSITY;
-	txt_green = FULL_INTENSITY;
-	txt_blue = FULL_INTENSITY;
 	bg_red = 0;
 	bg_green = 0;
 	bg_blue = 0;
@@ -72,8 +61,6 @@ void setup(void)
 void loop(void)
 {
 	// This code is invoked once each time the LEDs are scanned...
-
-	int	i;
 
 	if (numFrames > 0)
 		{
@@ -86,19 +73,36 @@ void loop(void)
 	// Clear the display
 	fillRect(display_buffer, 0, 0, 8, 8, 0, 0, 0);
 
+	// Render slash
+	txt_red = EIGHTH_INTENSITY;
+	txt_green = EIGHTH_INTENSITY;
+	txt_blue = EIGHTH_INTENSITY;
+	bltChar(display_buffer, slash, 0, 0);
+
 	// Implant X and Y addresses
-	for (i = 0; i < 8; i++)
-		final[i] = slash[i];
 	if (Marinara.flags & ID_ASSIGNED)
 		{
-		implant(x[Marinara.x_address]);
-		implant(y[Marinara.y_address]);
+		// Show ID in green
+		txt_red = 0;
+		txt_green = FULL_INTENSITY;
+		txt_blue = 0;
+
+		bltChar(display_buffer, x[Marinara.x_address], 0, 1);
+		bltChar(display_buffer, y[Marinara.y_address], 0, 1);
 		}
 	else
-		implant(dashes);
+		{
+		// Show unassigned state in yellow
+		txt_red = FULL_INTENSITY;
+		txt_green = FULL_INTENSITY;
+		txt_blue = 0;
 
-	// Render it to the display
-	bltChar(display_buffer, final, 0);
+		bltChar(display_buffer, dashes, 0, 1);
+		}
+
+	txt_red = FULL_INTENSITY;
+	txt_green = FULL_INTENSITY;
+	txt_blue = FULL_INTENSITY;
 }
 
 #endif /* DEMO_H_ */
