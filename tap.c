@@ -569,29 +569,51 @@ void process_packet(channel *c)
 
 				break;
 
-			case TAP_PACKET_SET_BRIGHT_MODE:
+			case TAP_PACKET_SET_BRIGHTNESS_MODE:
 
-				Marinara.flags |= BRIGHT_MODE;
-
-				if ((peek_byte(c, 0) & TAP_PACKET_FLAG_TEMPORARY) == 0)
+				if (packet_length == 5 || peek_byte(c, 5) == 1)
 					{
-					// Save to flash
-					Burgermaster_shadow.flags |= BRIGHT_MODE;
-					save_state();
+					Marinara.flags |= BRIGHT_MODE;
+
+					if ((peek_byte(c, 0) & TAP_PACKET_FLAG_TEMPORARY) == 0)
+						{
+						// Save to flash
+						Burgermaster_shadow.flags |= BRIGHT_MODE;
+						save_state();
+						}
 					}
+				else
+					if (peek_byte(c, 5) == 0)
+						{
+						Marinara.flags &= ~BRIGHT_MODE;
+
+						if ((peek_byte(c, 0) & TAP_PACKET_FLAG_TEMPORARY) == 0)
+							{
+							// Save to flash
+							Burgermaster_shadow.flags &= ~BRIGHT_MODE;
+							save_state();
+							}
+						}
 
 				break;
 
-			case TAP_PACKET_SET_LOW_POWER_MODE:
+			case TAP_PACKET_USER_DEFINED:
 
-				Marinara.flags &= ~BRIGHT_MODE;
-
-				if ((peek_byte(c, 0) & TAP_PACKET_FLAG_TEMPORARY) == 0)
+				if (packet_length == 5)
 					{
-					// Save to flash
-					Burgermaster_shadow.flags &= ~BRIGHT_MODE;
-					save_state();
+					// Legacy for set low power mode
+					Marinara.flags &= ~BRIGHT_MODE;
+
+					if ((peek_byte(c, 0) & TAP_PACKET_FLAG_TEMPORARY) == 0)
+						{
+						// Save to flash
+						Burgermaster_shadow.flags &= ~BRIGHT_MODE;
+						save_state();
+						}
 					}
+				else
+					// Handle user defined subtypes here
+					;
 
 				break;
 
