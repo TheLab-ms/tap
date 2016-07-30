@@ -882,7 +882,7 @@ void fillRect(unsigned char *buffer,
 			}
 
 		// Go to the next row
-		buffer = buffer + (8 - width) * 3;
+		buffer = buffer + (8 - x - width) * 3;
 		}
 }
 

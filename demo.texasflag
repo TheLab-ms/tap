@@ -1,0 +1,31 @@
+/*
+ * demo.texasflag
+ *
+ * This demo displays a Texas flag.
+ *
+ */
+
+#ifndef DEMO_H_
+#define DEMO_H_
+
+#define	DEMO
+
+void setup(void)
+{
+	// This code is invoked once to initialize the demo...
+
+	fillRect(display_buffer, 0, 0, 4, 8, 0, 0, FULL_INTENSITY);
+	fillRect(display_buffer, 1, 3, 2, 2, FULL_INTENSITY, FULL_INTENSITY,
+			FULL_INTENSITY);
+	fillRect(display_buffer, 4, 0, 4, 4, FULL_INTENSITY, FULL_INTENSITY,
+			FULL_INTENSITY);
+	fillRect(display_buffer, 4, 4, 4, 4, FULL_INTENSITY, 0, 0);
+}
+
+void loop(void)
+{
+	// This code is invoked once each time the LEDs are scanned...
+
+}
+
+#endif /* DEMO_H_ */
