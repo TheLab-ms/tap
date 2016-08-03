@@ -42,9 +42,9 @@ volatile unsigned int	LRN_mode_triggered;
 // Channels to assemble packets from the input sources
 typedef struct channel
 {
-	unsigned int	next_in;
-	unsigned int	next_out;
-	unsigned char	buffer[BUFFER_SIZE];
+	volatile unsigned int	next_in;
+	volatile unsigned int	next_out;
+	unsigned char			buffer[BUFFER_SIZE];
 
 } channel;
 
@@ -61,6 +61,9 @@ channel	usb;
 
 channel	x_out;
 channel	y_out;
+
+volatile unsigned char	x_interrupts_off = 1;
+volatile unsigned char	y_interrupts_off = 1;
 
 //***********  Text scrolling  ***********************************************
 
@@ -81,6 +84,7 @@ text_fragment	*current_fragment;
 unsigned int	offset;
 unsigned int	text_hold;
 
+unsigned char	temp_text_created;
 unsigned char	I_am_not_text_master = 0;
 unsigned int	text_sync_origin;
 unsigned char	first_char;
@@ -160,6 +164,22 @@ unsigned int bytes_in(channel *c)
 }
 
 /*
+ ************ free_space *****************************************************
+ *
+ * Return the number of free bytes in the buffer
+ *
+ */
+unsigned int free_space(channel *c)
+{
+	if (c->next_in >= c->next_out)
+		// Account for wrap around
+		return BUFFER_SIZE - c->next_in + c->next_out - 1;
+	else
+		// Number is difference between pointers
+		return c->next_out - c->next_in - 1;
+}
+
+/*
  ************ peek_byte ******************************************************
  *
  * Nondestructively retrieve a byte from the buffer
@@ -168,6 +188,24 @@ unsigned int bytes_in(channel *c)
 unsigned char peek_byte(channel *c, unsigned int index)
 {
 	return c->buffer[(c->next_out + index) % BUFFER_SIZE];
+}
+
+/*
+ ************ get_byte *******************************************************
+ *
+ * Destructively retrieve a byte from the buffer
+ *
+ */
+unsigned char get_byte(channel *c)
+{
+	unsigned char	ch;
+
+	ch = c->buffer[c->next_out];
+
+	if (bytes_in(c) > 0)
+		c->next_out = (c->next_out + 1) % BUFFER_SIZE;
+
+	return ch;
 }
 
 /*
@@ -202,6 +240,22 @@ unsigned int contiguous_block_size(channel *c)
 }
 
 /*
+ ************ headroom *******************************************************
+ *
+ * Return the size of the largest contiguous block which can be inserted
+ *
+ */
+unsigned int headroom(channel *c)
+{
+	if (c->next_in >= c->next_out)
+		// Size is rest of the buffer
+		return BUFFER_SIZE - c->next_out;
+	else
+		// Size is difference between pointers - 1
+		return c->next_out - c->next_in - 1;
+}
+
+/*
  ************ packet_address *************************************************
  *
  * Return the address of the start of the first packet in the buffer
@@ -213,6 +267,17 @@ unsigned char * packet_address(channel *c)
 }
 
 /*
+ ************ output_address *************************************************
+ *
+ * Return the address of the start of the next free byte in the buffer
+ *
+ */
+unsigned char * output_address(channel *c)
+{
+	return &c->buffer[c->next_in];
+}
+
+/*
  ************ buffer_address *************************************************
  *
  * Return the address of the start of the buffer
@@ -221,6 +286,93 @@ unsigned char * packet_address(channel *c)
 unsigned char * buffer_address(channel *c)
 {
 	return c->buffer;
+}
+
+/*
+ ************ get_in_index ***************************************************
+ *
+ * Return the input index of a channel
+ *
+ */
+unsigned int get_in_index(channel *c)
+{
+	return c->next_in;
+}
+
+/*
+ ************ restore_in_index ***********************************************
+ *
+ * Restore the input index of a channel
+ *
+ */
+void restore_in_index(channel *c, unsigned int index)
+{
+	c->next_in = index;
+}
+
+/*
+ ************ put_bytes ******************************************************
+ *
+ * Insert a block of bytes into the buffer
+ *
+ * c = the output channel
+ * bytes = the address of the first of the bytes
+ * count = the number of bytes
+ *
+ */
+int put_bytes(channel *c, unsigned char *bytes, unsigned int count)
+{
+	if (count > free_space(c))
+		// Buffer is full
+		return 0;
+
+	if (count <= headroom(c))
+		{
+		// Block can fit contiguously
+		memcpy(output_address(c), bytes, count);
+		}
+	else
+		{
+		// Block will wrap around
+		memcpy(output_address(c), bytes, headroom(c));
+		memcpy(buffer_address(c), bytes + headroom(c),
+				count - headroom(c));
+		}
+	c->next_in = (c->next_in + count) % BUFFER_SIZE;
+
+	return 1;
+}
+
+/*
+ ************ tickle_serial_interrupt ****************************************
+ *
+ * Enable serial transmit interrupt if necessary
+ *
+ */
+void tickle_serial_interrupt(channel *c)
+{
+	if (c == &x_out)
+		{
+		// Prepare to output to next X
+		if (x_interrupts_off)
+			{
+			// Enable interrupt
+			UCA1IE |= UCTXIE;
+
+			x_interrupts_off = 0;
+			}
+		}
+	else if (c == &y_out)
+		{
+		// Prepare to output to next Y
+		if (y_interrupts_off)
+			{
+			// Enable interrupt
+			UCA0IE |= UCTXIE;
+
+			y_interrupts_off = 0;
+			}
+		}
 }
 
 /*
@@ -241,6 +393,108 @@ int packet_complete(channel *c)
 
 	size = (peek_byte(c, 1) << 8) + peek_byte(c, 2);
 	return avail >= size;
+}
+
+/*
+ ************ send_packet ****************************************************
+ *
+ * Send a packet using a channel
+ *
+ */
+int send_packet(channel *c,
+		unsigned char packet_type,
+		unsigned char x,
+		unsigned char y,
+		unsigned int more_bytes,
+		unsigned char *bytes)
+{
+	unsigned int	size;
+
+	// Total size of the packet
+	size = 5 + more_bytes;
+	if (size > free_space(c))
+		// Buffer overflow
+		return 0;
+
+	// Put packet header into the channel
+	if (put_byte(c, packet_type) == 0)
+		return 0;
+	if (put_byte(c, size >> 8) == 0)
+		return 0;
+	if (put_byte(c, size) == 0)
+		return 0;
+	if (put_byte(c, x) == 0)
+		return 0;
+	if (put_byte(c, y) == 0)
+		return 0;
+
+	if (more_bytes > 0 && put_bytes(c, bytes, more_bytes) == 0)
+		return 0;
+
+	tickle_serial_interrupt(c);
+
+	return 1;
+}
+
+
+/*
+ ************ forward_packet *************************************************
+ *
+ * Forward a packet through both x and y output channels
+ *
+ */
+int forward_packet(channel *c)
+{
+	unsigned int	size;
+	unsigned int	chunk_1_size;
+	unsigned int	chunk_2_size;
+	unsigned char	*chunk_1_address;
+	unsigned char	*chunk_2_address;
+
+	size = (peek_byte(c, 1) << 8) + peek_byte(c, 2);
+
+	// Determine whether packet wraps around the buffer
+	if (size <= contiguous_block_size(c))
+		{
+		// Packet is contiguous
+		chunk_1_size = size;
+		chunk_1_address = packet_address(c);
+		chunk_2_size = 0;
+		}
+	else
+		{
+		// Packet wraps around the buffer
+		chunk_1_size = contiguous_block_size(c);
+		chunk_1_address = packet_address(c);
+		chunk_2_size = size - contiguous_block_size(c);
+		chunk_2_address = buffer_address(c);
+		}
+
+	// Blow chunks to x neighbor
+	if (size <= free_space(&x_out))
+		{
+		if (put_bytes(&x_out, chunk_1_address, chunk_1_size) == 0)
+			return 0;
+		if (chunk_2_size &&
+				put_bytes(&x_out, chunk_2_address, chunk_2_size) == 0)
+			return 0;
+
+		tickle_serial_interrupt(&x_out);
+		}
+
+	// Blow chunks to y neighbor
+	if (size <= free_space(&y_out))
+		{
+		if (put_bytes(&y_out, chunk_1_address, chunk_1_size) == 0)
+			return 0;
+		if (chunk_2_size &&
+				put_bytes(&y_out, chunk_2_address, chunk_2_size) == 0)
+			return 0;
+
+		tickle_serial_interrupt(&y_out);
+		}
+
+	return 1;
 }
 
 /*
@@ -432,54 +686,6 @@ void load_image(unsigned char *display_buffer, binary_image	*image_ptr)
 }
 
 /*
- ************ uart_putcX *****************************************************
- *
- * Send a byte to the next TAP along X axis using the serial port
- *
- * ch = the byte
- *
- */
-void uart_putcX(const unsigned char ch)
-{
-	// Wait for the transmit buffer to be ready
-	while (!(UCA1IFG & UCTXIFG));
-
-	// Transmit data
-	UCA1TXBUF = ch;
-}
-
-//*********** uart_putsX *****************************************************
-void uart_putsX(const unsigned char *str)
-{
-	while (*str != '\0')
-		uart_putcX(*str++);
-}
-
-/*
- ************ uart_putcY *****************************************************
- *
- * Send a byte to the next TAP along Y axis using the serial port
- *
- * ch = the byte
- *
- */
-void uart_putcY(const unsigned char ch)
-{
-	/* Wait for the transmit buffer to be ready */
-	while (!(UCA0IFG & UCTXIFG));
-
-	/* Transmit data */
-	UCA0TXBUF = ch;
-}
-
-//*********** uart_putsY *****************************************************
-void uart_putsY(const unsigned char *str)
-{
-	while (*str != '\0')
-		uart_putcY(*str++);
-}
-
-/*
  ************ set_id *********************************************************
  *
  * Set my ID
@@ -504,24 +710,19 @@ void set_id(int x, int y, int flags)
 		save_state();
 		}
 
-	// Propagate downstream
-	uart_putcX(TAP_PACKET_SET_ID |
-			TAP_PACKET_FLAG_IGNOREADDRESS |
-			TAP_PACKET_FLAG_NOFORWARD |
-			flags & TAP_PACKET_FLAG_TEMPORARY);
-	uart_putcX(0);
-	uart_putcX(5);
-	uart_putcX(x + 1);
-	uart_putcX(y);
-
-	uart_putcY(TAP_PACKET_SET_ID |
-			TAP_PACKET_FLAG_IGNOREADDRESS |
-			TAP_PACKET_FLAG_NOFORWARD |
-			flags & TAP_PACKET_FLAG_TEMPORARY);
-	uart_putcY(0);
-	uart_putcY(5);
-	uart_putcY(x);
-	uart_putcY(y + 1);
+	// Inform immediate neighbors to the right and above
+	send_packet(&x_out,
+			TAP_PACKET_SET_ID |
+						TAP_PACKET_FLAG_IGNOREADDRESS |
+						TAP_PACKET_FLAG_NOFORWARD |
+						flags & TAP_PACKET_FLAG_TEMPORARY,
+			x + 1, y, 0, 0);
+	send_packet(&y_out,
+			TAP_PACKET_SET_ID |
+						TAP_PACKET_FLAG_IGNOREADDRESS |
+						TAP_PACKET_FLAG_NOFORWARD |
+						flags & TAP_PACKET_FLAG_TEMPORARY,
+			x, y + 1, 0, 0);
 }
 
 /*
@@ -534,6 +735,7 @@ void set_id(int x, int y, int flags)
  */
 void process_packet(channel *c)
 {
+	unsigned char	more_data;
 	unsigned int	image_length;
 	unsigned int	packet_length;
 	text_fragment	*text;
@@ -546,11 +748,16 @@ void process_packet(channel *c)
 		return;
 		}
 
+	if ((peek_byte(c, 0) & TAP_PACKET_FLAG_NOFORWARD) == 0 &&
+			c != &serial_x && c != &serial_y)
+		// Packets from other than x or y serial ports get forwarded
+		forward_packet(c);
+
 	if ((peek_byte(c, 0) & TAP_PACKET_FLAG_IGNOREADDRESS) ||
 			(Marinara.flags & ID_ASSIGNED) == 0 ||
 			(peek_byte(c, 3) == Marinara.x_address) &&
 			(peek_byte(c, 4) == Marinara.y_address))
-		// Broadcast mode or ID not assigned or ID matches
+		// Ignore address mode or ID not assigned or ID matches
 		switch (peek_byte(c, 0) & TAP_PACKET_TYPE_MASK)
 			{
 			case TAP_PACKET_FACTORY_RESET:
@@ -669,7 +876,7 @@ void process_packet(channel *c)
 					}
 
 				// Display starting with the first character
-				prepare_to_scroll_text((text_fragment *)temp_text);
+				prepare_to_scroll_text(text);
 
 				break;
 
@@ -684,23 +891,17 @@ void process_packet(channel *c)
 				text_sync_origin = peek_byte(c, 5);	//!!! % (txt_length + 1);
 
 				// Tell the next guy his origin
-				uart_putcX(TAP_PACKET_TEXT_SYNC_ORIGIN | TAP_PACKET_FLAG_NOFORWARD);
-				uart_putcX(0);
-				uart_putcX(6);
-				uart_putcX(0);
-				uart_putcX(0);
-				uart_putcX(text_sync_origin + 1);
+				more_data = text_sync_origin + 1;
+				send_packet(&x_out, TAP_PACKET_TEXT_SYNC_ORIGIN |
+						TAP_PACKET_FLAG_NOFORWARD, 0, 0, 1, &more_data);
 
 				break;
 
 			case TAP_PACKET_TEXT_SYNC_MARK:
 
 				// Tell the next guy to follow suit
-				uart_putcX(TAP_PACKET_TEXT_SYNC_MARK | TAP_PACKET_FLAG_NOFORWARD);
-				uart_putcX(0);
-				uart_putcX(5);
-				uart_putcX(0);
-				uart_putcX(0);
+				send_packet(&x_out, TAP_PACKET_TEXT_SYNC_MARK |
+						TAP_PACKET_FLAG_NOFORWARD, 0, 0, 0, 0);
 
 				// Resume scrolling with the character at the origin
 				offset = 0;
@@ -1002,6 +1203,9 @@ void create_text_fragment(
 	txt->green_intensity = green;
 	txt->blue_intensity = blue;
 	txt->next_address = (text_fragment *)0xFFFF;
+
+	if (buffer == temp_text)
+		temp_text_created = 1;
 }
 
 /*
@@ -1045,6 +1249,9 @@ void create_split_text_fragment(
 	txt->green_intensity = green;
 	txt->blue_intensity = blue;
 	txt->next_address = (text_fragment *)0xFFFF;
+
+	if (buffer == temp_text)
+		temp_text_created = 1;
 }
 
 /*
@@ -1137,11 +1344,8 @@ void start_scrolling_text(text_fragment *fragment)
 	if (!I_am_not_text_master)
 		{
 		// Hut 1...hut 2...
-		uart_putcX(TAP_PACKET_TEXT_SYNC_MARK | TAP_PACKET_FLAG_NOFORWARD);
-		uart_putcX(0);
-		uart_putcX(5);
-		uart_putcX(0);
-		uart_putcX(0);
+		send_packet(&x_out, TAP_PACKET_TEXT_SYNC_MARK |
+				TAP_PACKET_FLAG_NOFORWARD, 0, 0, 0, 0);
 
 		// Nobody is there to ask me to do this
 		first_char = 0;
@@ -1224,11 +1428,8 @@ void scroll_text(void)
 			if (!I_am_not_text_master)
 				{
 				// Periodically resync everybody
-				uart_putcX(TAP_PACKET_TEXT_SYNC_MARK | TAP_PACKET_FLAG_NOFORWARD);
-				uart_putcX(0);
-				uart_putcX(5);
-				uart_putcX(0);
-				uart_putcX(0);
+				send_packet(&x_out, TAP_PACKET_TEXT_SYNC_MARK |
+						TAP_PACKET_FLAG_NOFORWARD, 0, 0, 0, 0);
 				}
 			}
 		else
@@ -1302,6 +1503,8 @@ __interrupt void Port_1(void)
 #pragma vector=USCI_A0_VECTOR
 __interrupt void USCI_A0_ISR(void)
 {
+	unsigned char	ch;
+
 	switch(__even_in_range(UCA0IV,4))
 		{
 		case 0:							// Vector 0 - no interrupt
@@ -1310,6 +1513,17 @@ __interrupt void USCI_A0_ISR(void)
 			put_byte(&serial_y, UCA0RXBUF);
 			break;
 		case 4:							// Vector 4 - TXIFG
+			// Transmit data
+			ch = get_byte(&y_out);
+			UCA0TXBUF = ch;
+
+			if (bytes_in(&y_out) == 0)
+				{
+				// Disable interrupt
+				UCA0IE &= ~UCTXIE;
+				y_interrupts_off = 1;
+				}
+
 			break;
 		default:
 			break;
@@ -1325,6 +1539,8 @@ __interrupt void USCI_A0_ISR(void)
 #pragma vector=USCI_A1_VECTOR
 __interrupt void USCI_A1_ISR(void)
 {
+	unsigned char	ch;
+
 	switch(__even_in_range(UCA1IV,4))
 		{
 		case 0:							// Vector 0 - no interrupt
@@ -1333,6 +1549,17 @@ __interrupt void USCI_A1_ISR(void)
 			put_byte(&serial_x, UCA1RXBUF);
 			break;
 		case 4:							// Vector 4 - TXIFG
+			// Transmit data
+			ch = get_byte(&x_out);
+			UCA1TXBUF = ch;
+
+			if (bytes_in(&x_out) == 0)
+				{
+				// Disable interrupt
+				UCA1IE &= ~UCTXIE;
+				x_interrupts_off = 1;
+				}
+
 			break;
 		default:
 			break;
@@ -1361,7 +1588,7 @@ void config_init(void)
 	else if ((Marinara.flags & DOWNLOADED_MASK) == DOWNLOADED_TEXT)
 		{
 		// Set up to scroll  the text
-		start_scrolling_text((text_fragment *)Marinara.data_address);
+		prepare_to_scroll_text((text_fragment *)Marinara.data_address);
 
 		// Skip boot up color cycling display test
 		next_color = 5;
@@ -1398,7 +1625,7 @@ void config_init(void)
 void init_tap(void)
 {
 	burgermaster	*flashSave;
-	text_fragment	*txt;
+	unsigned char	data;
 
 	init_ioports();
 	initU5();						// All 8 outputs high
@@ -1434,10 +1661,6 @@ void init_tap(void)
 		factory_defaults(&Marinara);
 	Burgermaster_shadow = Marinara;
 
-	// Mark temporary text fragment as invalid
-	txt = (text_fragment *)temp_text;
-	txt->next_address = 0;
-
 	// Initialize input and output channels
 	flush_channel(&serial_x);
 	flush_channel(&serial_y);
@@ -1457,16 +1680,15 @@ void init_tap(void)
 	config_init();
 
 	// Enable interrupt on port 1 pin 1
-	P1IE |= BIT1;					// P1.0 interrupt enabled
-	P1IES |= BIT1;					// P1.0 Hi/lo edge
-	P1IFG &= ~BIT1;					// P1.0 IFG cleared
+	P1IE |= BIT1;					// P1.1 interrupt enabled
+	P1IES |= BIT1;					// P1.1 Hi/lo edge
+	P1IFG &= ~BIT1;					// P1.1 IFG cleared
 	LRN_mode_triggered = 0;
 
 	__bis_SR_register(GIE);			// Enable global interrupts
 
 	if ((Marinara.flags & DOWNLOADED_MASK) == DOWNLOADED_TEXT ||
-			(Marinara.flags & DOWNLOADED_MASK) == 0 &&
-			  txt->next_address != 0)
+			(Marinara.flags & DOWNLOADED_MASK) == 0 && temp_text_created)
 		{
 		// Prepare for synchronized text scrolling
 
@@ -1474,11 +1696,8 @@ void init_tap(void)
 		__delay_cycles(12000);
 
 		// Own the TAP to the right
-		uart_putcX(TAP_PACKET_TEXT_SYNC_ESTABLISH | TAP_PACKET_FLAG_NOFORWARD);
-		uart_putcX(0);
-		uart_putcX(5);
-		uart_putcX(0);
-		uart_putcX(0);
+		send_packet(&x_out, TAP_PACKET_TEXT_SYNC_ESTABLISH |
+				TAP_PACKET_FLAG_NOFORWARD, 0, 0, 0, 0);
 
 		// Wait a little for the one to the left to do the same
 		process_packets_for_awhile(1000);
@@ -1486,12 +1705,9 @@ void init_tap(void)
 		if (!I_am_not_text_master)
 			{
 			// I am the leftmost TAP and am in control, tell #2 his origin
-			uart_putcX(TAP_PACKET_TEXT_SYNC_ORIGIN | TAP_PACKET_FLAG_NOFORWARD);
-			uart_putcX(0);
-			uart_putcX(6);
-			uart_putcX(0);
-			uart_putcX(0);
-			uart_putcX(1);
+			data = 1;
+			send_packet(&x_out, TAP_PACKET_TEXT_SYNC_ORIGIN |
+					TAP_PACKET_FLAG_NOFORWARD, 0, 0, 1, &data);
 			}
 		}
 
@@ -1548,15 +1764,18 @@ void scan_tap(void)
 		{
 #ifdef DEMO
 
-		process_packets();
+		if ((Marinara.flags & DOWNLOADED_MASK) == 0)
+			{
+			process_packets();
 
-		// Step the demo
-		loop();
+			// Step the demo
+			loop();
+			}
+
 #endif
 
 		if ((Marinara.flags & DOWNLOADED_MASK) == DOWNLOADED_TEXT ||
-				(Marinara.flags & DOWNLOADED_MASK) == 0 &&
-				  ((text_fragment *)temp_text)->next_address != 0)
+				(Marinara.flags & DOWNLOADED_MASK) == 0 && temp_text_created)
 			{
 			// Scroll text
 			if (loops > 0)
