@@ -35,6 +35,8 @@ unsigned int	next_color;
 
 volatile unsigned int	LRN_mode_triggered;
 
+unsigned char	*heap_origin;
+
 //***********  Communication channels  ***************************************
 
 #define	BUFFER_SIZE	256		/* power of 2 for best performance */
@@ -117,6 +119,21 @@ void init_ioports(void);
 void scan_LEDs(void);
 void initU5(void);
 
+
+/*
+ ************ initialize_heap ************************************************
+ *
+ * Initialize the flash memory heap
+ *
+ */
+void initialize_heap(void)
+{
+	extern	unsigned char	__TI_CINIT_Limit;
+
+	// Segments are 512 bytes long, so round up to first whole segment
+	heap_origin = &__TI_CINIT_Limit + 511;
+	heap_origin = (unsigned char *)((unsigned int)heap_origin & ~511);
+}
 
 /*
  ************ flush_channel **************************************************
@@ -373,6 +390,52 @@ void tickle_serial_interrupt(channel *c)
 			y_interrupts_off = 0;
 			}
 		}
+}
+
+/*
+ ************ packet_CRC *****************************************************
+ *
+ * Calculates the CRC of the first packet in a channel
+ *
+ */
+unsigned int packet_CRC(channel *c)
+{
+	unsigned int	i;
+	unsigned int	size;
+	unsigned int	chunk_1_size;
+	unsigned int	chunk_2_size;
+	unsigned char	*chunk_1_address;
+	unsigned char	*chunk_2_address;
+
+	size = (peek_byte(c, 1) << 8) + peek_byte(c, 2);
+
+	// Seed the CRC
+	CRCINIRES = 0x1021;
+
+	// Determine whether packet wraps around the buffer
+	if (size <= contiguous_block_size(c))
+		{
+		// Packet is contiguous
+		chunk_1_size = size;
+		chunk_1_address = packet_address(c);
+		chunk_2_size = 0;
+		}
+	else
+		{
+		// Packet wraps around the buffer
+		chunk_1_size = contiguous_block_size(c);
+		chunk_1_address = packet_address(c);
+		chunk_2_size = size - contiguous_block_size(c);
+		chunk_2_address = buffer_address(c);
+		}
+
+	// Compute the CRC
+	for (i = 0; i < chunk_1_size; i++)
+		CRCDI = *chunk_1_address++;
+	for (i = 0; i < chunk_2_size; i++)
+		CRCDI = *chunk_2_address++;
+
+	return CRCINIRES;
 }
 
 /*
@@ -736,9 +799,13 @@ void set_id(int x, int y, int flags)
 void process_packet(channel *c)
 {
 	unsigned char	more_data;
+	unsigned int	crc;
 	unsigned int	image_length;
 	unsigned int	packet_length;
 	text_fragment	*text;
+
+	static unsigned int	xCRC = 0x1021;
+	static unsigned int	yCRC = 0x1021;
 
 	packet_length = (peek_byte(c, 1) << 8) + peek_byte(c, 2);
 	if (packet_length > BIGGEST_PACKET)
@@ -748,9 +815,35 @@ void process_packet(channel *c)
 		return;
 		}
 
-	if ((peek_byte(c, 0) & TAP_PACKET_FLAG_NOFORWARD) == 0 &&
-			c != &serial_x && c != &serial_y)
-		// Packets from other than x or y serial ports get forwarded
+	// if channel x or y, check for duplicate and delete and return if so
+	if (c == &serial_x)
+		{
+		crc = packet_CRC(c);
+		if (crc == yCRC)
+			{
+			// Matches the last packet received from Y; ignore it
+			remove_bytes(c, packet_length);
+			return;
+			}
+
+		// Remember this one
+		xCRC = crc;
+		}
+	if (c == &serial_y)
+		{
+		crc = packet_CRC(c);
+		if (crc == xCRC)
+			{
+			// Matches the last packet received from X; ignore it
+			remove_bytes(c, packet_length);
+			return;
+			}
+
+		// Remember this one
+		yCRC = crc;
+		}
+
+	if ((peek_byte(c, 0) & TAP_PACKET_FLAG_NOFORWARD) == 0)
 		forward_packet(c);
 
 	if ((peek_byte(c, 0) & TAP_PACKET_FLAG_IGNOREADDRESS) ||
@@ -1660,6 +1753,9 @@ void init_tap(void)
 		// Default to low-power mode, ID not assigned, nothing downloaded
 		factory_defaults(&Marinara);
 	Burgermaster_shadow = Marinara;
+
+	// Initialize flash memory heap
+	initialize_heap();
 
 	// Initialize input and output channels
 	flush_channel(&serial_x);
