@@ -91,7 +91,6 @@ unsigned char	I_am_not_text_master = 0;
 unsigned int	text_sync_origin;
 unsigned char	first_char;
 const unsigned char	*current_char;
-const unsigned char	*last_char;
 
 //***********  Function prototypes  ******************************************
 
@@ -266,7 +265,7 @@ unsigned int headroom(channel *c)
 {
 	if (c->next_in >= c->next_out)
 		// Size is rest of the buffer
-		return BUFFER_SIZE - c->next_out;
+		return BUFFER_SIZE - c->next_in;
 	else
 		// Size is difference between pointers - 1
 		return c->next_out - c->next_in - 1;
@@ -579,6 +578,73 @@ void factory_defaults(burgermaster *state)
 }
 
 /*
+ ************ need_to_erase **************************************************
+ *
+ * Determine whether flash memory erasure is needed to store data
+ *
+ */
+int need_to_erase(char *old, char *new, unsigned int length)
+{
+	char	c;
+
+	for ( ; length-- > 0 ; )
+		{
+		// Are the bytes different?
+		c = *old++ ^ *new;
+
+		// Are we turning a zero into a one?  If so, must erase.
+		if (c & *new++)
+			return 1;
+		}
+
+	return 0;
+}
+
+/*
+ ************ find_state *****************************************************
+ *
+ * Find last saved state in flash memory
+ *
+ */
+burgermaster *find_state(int unused_only)
+{
+	burgermaster	*limit;
+	burgermaster	*scanner;
+
+	// Start at the base of the information segment
+	scanner = (burgermaster *)FLASH_INFO_D;
+
+	// This is the address beyond the highest possible copy
+	limit = (burgermaster *)(FLASH_INFO_D +
+			(128 / sizeof(burgermaster)) * sizeof(burgermaster));
+
+	while (scanner < limit)
+		{
+		if (!unused_only && scanner->tag[0] == 'T' &&
+				scanner->tag[1] == 'A' && scanner->tag[2] == 'P')
+			// Found a written record
+			return scanner;
+
+		if (scanner->tag[0] == 0xFF && scanner->tag[1] == 0xFF &&
+				scanner->tag[2] == 0xFF)
+			// Found an unwritten record
+			return scanner;
+
+		// Otherwise, this entry has been deleted?
+		if (scanner->tag[0] != 0 || scanner->tag[1] != 0 ||
+				scanner->tag[2] != 0)
+			// Found a corrupt record, we did not initialize it
+			return 0;
+
+		// Advance to the next candidate
+		scanner++;
+		}
+
+	// Did not find it, must be full of deleted records
+	return 0;
+}
+
+/*
  ************ save_state *****************************************************
  *
  * Save state to flash memory
@@ -586,18 +652,101 @@ void factory_defaults(burgermaster *state)
  */
 void save_state(void)
 {
-	char	*flash_ptr;
+	burgermaster	defaults;
+	burgermaster	*current_state;
+	burgermaster	*unused;
+	int				delete = 0;
+	int				erase = 0;
+	int				overwrite = 0;
+	int				matches_defaults = 0;
 
-	flash_ptr = (char *)FLASH_INFO_D;
-	FCTL3 = FWKEY;			// Clear Lock bit
-	FCTL1 = FWKEY+ERASE;	// Set Erase bit
-	*flash_ptr = 0;			// Dummy write to erase Flash seg
-	FCTL1 = FWKEY+WRT;		// Set WRT bit for write operation
+	// Get default settings
+	factory_defaults(&defaults);
 
-	memcpy(flash_ptr, &Burgermaster_shadow, sizeof(burgermaster));
+	// If the state matches the defaults, we do not need to store it
+	if (memcmp(&Burgermaster_shadow, &defaults, sizeof(burgermaster)) == 0)
+		matches_defaults = 1;
 
-	FCTL1 = FWKEY;			// Clear WRT bit
-	FCTL3 = FWKEY+LOCK;		// Set LOCK bit
+	// Find the current state record, if any
+	current_state = find_state(0);
+	if (current_state == 0)
+		{
+		// No undeleted state entries, must erase segment to create one
+		erase = 1;
+
+		if (!matches_defaults)
+			// Write state when done
+			overwrite = 1;
+		}
+	else
+		{
+		if (matches_defaults)
+			{
+			if (current_state->tag[0] == 'T')
+				// We previously had a state record, just delete it
+				delete = 1;
+			}
+		else
+			// Unless the state does not match what is stored, we do not need to store it again
+			if (memcmp(&Burgermaster_shadow, current_state, sizeof(burgermaster)) != 0)
+				// Can overwrite current state record (change 1's to 0's OK)?
+				if (!need_to_erase((char *)current_state, (char *)&Burgermaster_shadow,
+						sizeof(burgermaster)))
+					{
+					// Can just reuse this record
+					overwrite = 1;
+					unused = current_state;
+					}
+				else
+					{
+					// Can delete this record and use the next one?
+					unused = find_state(1);
+					if (unused != 0)
+						// Found unused record
+						delete = 1;
+					else
+						// No more available
+						erase = 1;
+
+					overwrite = 1;
+					}
+		}
+
+	if (delete)
+		{
+		FCTL3 = FWKEY;			// Clear Lock bit
+		FCTL1 = FWKEY+WRT;		// Set WRT bit for write operation
+
+		current_state->tag[0] = 0;
+		current_state->tag[1] = 0;
+		current_state->tag[2] = 0;
+
+		FCTL1 = FWKEY;			// Clear WRT bit
+		FCTL3 = FWKEY+LOCK;		// Set LOCK bit
+		}
+
+	if (erase)
+		{
+		unused = (burgermaster *)FLASH_INFO_D;
+		FCTL3 = FWKEY;			// Clear Lock bit
+		FCTL1 = FWKEY+ERASE;	// Set Erase bit
+
+		unused->tag[0] = 0;		// Dummy write to erase Flash seg
+
+		FCTL1 = FWKEY;			// Clear WRT bit
+		FCTL3 = FWKEY+LOCK;		// Set LOCK bit
+		}
+
+	if (overwrite)
+		{
+		FCTL3 = FWKEY;			// Clear Lock bit
+		FCTL1 = FWKEY+WRT;		// Set WRT bit for write operation
+
+		memcpy(unused, &Burgermaster_shadow, sizeof(burgermaster));
+
+		FCTL1 = FWKEY;			// Clear WRT bit
+		FCTL3 = FWKEY+LOCK;		// Set LOCK bit
+		}
 }
 
 /*
@@ -802,6 +951,8 @@ void process_packet(channel *c)
 	unsigned int	crc;
 	unsigned int	image_length;
 	unsigned int	packet_length;
+	unsigned int	text_index;
+	unsigned int	total_chars;
 	text_fragment	*text;
 
 	static unsigned int	xCRC = 0x1021;
@@ -975,40 +1126,72 @@ void process_packet(channel *c)
 
 			case TAP_PACKET_TEXT_SYNC_ESTABLISH:
 
-				I_am_not_text_master = 1;
+				if ((Marinara.flags & DOWNLOADED_MASK) == DOWNLOADED_TEXT ||
+						(Marinara.flags & DOWNLOADED_MASK) == 0 &&
+							temp_text_created)
+					I_am_not_text_master = 1;
 
 				break;
 
 			case TAP_PACKET_TEXT_SYNC_ORIGIN:
 
-				text_sync_origin = peek_byte(c, 5);	//!!! % (txt_length + 1);
+				if ((Marinara.flags & DOWNLOADED_MASK) == DOWNLOADED_TEXT ||
+						(Marinara.flags & DOWNLOADED_MASK) == 0 &&
+							temp_text_created)
+					{
+					text_sync_origin = peek_byte(c, 5);
 
-				// Tell the next guy his origin
-				more_data = text_sync_origin + 1;
-				send_packet(&x_out, TAP_PACKET_TEXT_SYNC_ORIGIN |
-						TAP_PACKET_FLAG_NOFORWARD, 0, 0, 1, &more_data);
+					// Tell the next guy his origin
+					more_data = text_sync_origin + 1;
+					send_packet(&x_out, TAP_PACKET_TEXT_SYNC_ORIGIN |
+							TAP_PACKET_FLAG_NOFORWARD, 0, 0, 1, &more_data);
+					}
 
 				break;
 
 			case TAP_PACKET_TEXT_SYNC_MARK:
 
-				// Tell the next guy to follow suit
-				send_packet(&x_out, TAP_PACKET_TEXT_SYNC_MARK |
-						TAP_PACKET_FLAG_NOFORWARD, 0, 0, 0, 0);
-
-				// Resume scrolling with the character at the origin
-				offset = 0;
-
-				// Need to do modulus here!!!
-//				if (text_sync_origin == txt_length)
-//					{
-//					current_char = first_fragment->text;
-//					first_char = 1;
-//					}
-//				else
+				if ((Marinara.flags & DOWNLOADED_MASK) == DOWNLOADED_TEXT ||
+						(Marinara.flags & DOWNLOADED_MASK) == 0 &&
+							temp_text_created)
 					{
-					current_char = &first_fragment->text[text_sync_origin];
-					first_char = 0;
+					// Tell the next guy to follow suit
+					send_packet(&x_out, TAP_PACKET_TEXT_SYNC_MARK |
+							TAP_PACKET_FLAG_NOFORWARD, 0, 0, 0, 0);
+
+					// Resume scrolling with the character at the origin
+					offset = 0;
+
+					// Determine total number of characters
+					total_chars = 0;
+					text = first_fragment;
+					while (text != (text_fragment *)0xFFFF)
+						{
+						total_chars = total_chars + text->num_chars;
+						text = text->next_address;
+						}
+
+					// Determine the current character
+					// If more TAPs than characters, repeat text
+					text_index = text_sync_origin % (total_chars + 1);
+					if (text_index == total_chars)
+						{
+						current_char = first_fragment->text;
+						current_fragment = first_fragment;
+						first_char = 1;
+						}
+					else
+						{
+						current_fragment = first_fragment;
+						while (text_index > current_fragment->num_chars)
+							{
+							text_index = text_index -
+									current_fragment->num_chars;
+							current_fragment = current_fragment->next_address;
+							}
+						current_char = &current_fragment->text[text_index];
+						first_char = 0;
+						}
 					}
 
 				break;
@@ -1402,7 +1585,6 @@ void prepare_to_scroll_text(text_fragment *fragment)
 	current_fragment = fragment;
 
 	current_char = fragment->text;
-	last_char = current_char + fragment->num_chars - 1;
 
 	txt_red = fragment->red_intensity;
 	txt_green = fragment->green_intensity;
@@ -1477,7 +1659,8 @@ void scroll_text(void)
 		if (first_char)
 			ch = *current_char;
 		else
-			if (current_char < last_char)
+			if (current_char <
+					current_fragment->text + current_fragment->num_chars - 1)
 				// Use next character in the same fragment
 				ch = *(current_char + 1);
 			else
@@ -1526,7 +1709,8 @@ void scroll_text(void)
 				}
 			}
 		else
-			if (current_char < last_char)
+			if (current_char <
+					current_fragment->text + current_fragment->num_chars - 1)
 				// Go to the next character in this fragment
 				current_char++;
 			else
@@ -1546,7 +1730,6 @@ void scroll_text(void)
 				txt_green = current_fragment->green_intensity;
 				txt_blue = current_fragment->blue_intensity;
 				current_char = current_fragment->text;
-				last_char = current_char + current_fragment->num_chars - 1;
 				}
 		}
 }
@@ -1742,9 +1925,9 @@ void init_tap(void)
 	UCA1CTL1 &= ~UCSWRST;			// Enable USCI 1
 	UCA1IE |= UCRXIE;				// Enable USCI_A0 RX interrupt
 
-	flashSave = (burgermaster *)FLASH_INFO_D;
-	if (flashSave->tag[0] == 'T' && flashSave->tag[1] == 'A' &&
-			flashSave->tag[2] == 'P')
+	flashSave = find_state(0);
+	if (flashSave != 0 && flashSave->tag[0] == 'T' &&
+			flashSave->tag[1] == 'A' && flashSave->tag[2] == 'P')
 		{
 		// Retrieve state saved to flash memory
 		Marinara = *flashSave;
