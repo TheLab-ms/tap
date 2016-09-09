@@ -1909,8 +1909,8 @@ void init_tap(void)
 	P3SEL = BIT3+BIT4;				// P3.3,4 = USCI_A0 TXD/RXD
 	UCA0CTL1 |= UCSWRST;			// **Put state machine in reset**
 	UCA0CTL1 |= UCSSEL_2;			// SMCLK
-	UCA0BR0 = 220;					// 12MHz 115200 (see User's Guide)
-	UCA0BR1 = 0;					// 12MHz 115200
+	UCA0BR0 = 209;					// 25MHz 115200 (see User's Guide)
+	UCA0BR1 = 0;					// 25MHz 115200 - adjusted for crystal
 	UCA0MCTL = UCBRS_0;				// Modln UCBRSx=0, UCBRFx=0,
 									// over sampling
 	UCA0CTL1 &= ~UCSWRST;			// **Initialize USCI state machine**
@@ -1919,7 +1919,7 @@ void init_tap(void)
 	P4SEL = BIT4+BIT5;				// P4.4,5 = USCI_A1 TXD/RXD
 	UCA1CTL1 |= UCSWRST;			// Reset USCI 1
 	UCA1CTL1 |= UCSSEL_2;			// SMCLK
-	UCA1BR0 = 220;					// 115,200 baud rate
+	UCA1BR0 = 209;					// 115,200 baud rate
 	UCA1BR1 = 0;
 	UCA1MCTL = UCBRS0;
 	UCA1CTL1 &= ~UCSWRST;			// Enable USCI 1
