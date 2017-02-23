@@ -1,0 +1,153 @@
+/*
+ * demo.heart
+ *
+ * This demo depicts a beating heart.
+ *
+ */
+
+#ifndef DEMO_H_
+#define DEMO_H_
+
+#define	DEMO
+
+#define	HOLD_FRAMES	7
+
+int	numFrames;
+
+unsigned int	frame;
+
+#define WIDTH	8
+#define HEIGHT	8
+
+unsigned char	display_buffer1[192];
+unsigned char	display_buffer2[192];
+unsigned char	display_buffer3[192];
+unsigned char	display_buffer4[192];
+
+void setup(void)
+{
+	// This code is invoked once to initialize the demo...
+
+	display_buffer[ 48 +  6 + 0] = FULL_INTENSITY;
+	display_buffer[ 48 + 15 + 0] = FULL_INTENSITY;
+	display_buffer[ 72 +  3 + 0] = FULL_INTENSITY;
+	display_buffer[ 72 +  6 + 0] = FULL_INTENSITY;
+	display_buffer[ 72 +  9 + 0] = FULL_INTENSITY;
+	display_buffer[ 72 + 12 + 0] = FULL_INTENSITY;
+	display_buffer[ 72 + 15 + 0] = FULL_INTENSITY;
+	display_buffer[ 72 + 18 + 0] = FULL_INTENSITY;
+	display_buffer[ 96 +  6 + 0] = FULL_INTENSITY;
+	display_buffer[ 96 +  9 + 0] = FULL_INTENSITY;
+	display_buffer[ 96 + 12 + 0] = FULL_INTENSITY;
+	display_buffer[ 96 + 15 + 0] = FULL_INTENSITY;
+	display_buffer[120 +  9 + 0] = FULL_INTENSITY;
+	display_buffer[120 + 12 + 0] = FULL_INTENSITY;
+
+	memcpy(display_buffer1, display_buffer, 192);
+	display_buffer1[ 24 +  6 + 0] = FULL_INTENSITY;
+	display_buffer1[ 24 + 15 + 0] = FULL_INTENSITY;
+	display_buffer1[ 48 +  3 + 0] = FULL_INTENSITY;
+	display_buffer1[ 48 +  9 + 0] = FULL_INTENSITY;
+	display_buffer1[ 48 + 12 + 0] = FULL_INTENSITY;
+	display_buffer1[ 48 + 18 + 0] = FULL_INTENSITY;
+
+	memcpy(display_buffer2, display_buffer1, 192);
+	display_buffer2[ 24 +  3 + 0] = FULL_INTENSITY;
+	display_buffer2[ 24 + 18 + 0] = FULL_INTENSITY;
+	display_buffer2[ 48 +  0 + 0] = FULL_INTENSITY;
+	display_buffer2[ 48 + 21 + 0] = FULL_INTENSITY;
+	display_buffer2[ 72 +  0 + 0] = FULL_INTENSITY;
+	display_buffer2[ 72 + 21 + 0] = FULL_INTENSITY;
+	display_buffer2[ 96 +  3 + 0] = FULL_INTENSITY;
+	display_buffer2[ 96 + 18 + 0] = FULL_INTENSITY;
+	display_buffer2[120 +  6 + 0] = FULL_INTENSITY;
+	display_buffer2[120 + 15 + 0] = FULL_INTENSITY;
+	display_buffer2[144 +  9 + 0] = FULL_INTENSITY;
+	display_buffer2[144 + 12 + 0] = FULL_INTENSITY;
+
+	memcpy(display_buffer3, display_buffer2, 192);
+	display_buffer3[ 96 +  0 + 0] = FULL_INTENSITY;
+	display_buffer3[ 96 + 21 + 0] = FULL_INTENSITY;
+	display_buffer3[120 +  3 + 0] = FULL_INTENSITY;
+	display_buffer3[120 + 18 + 0] = FULL_INTENSITY;
+	display_buffer3[144 +  6 + 0] = FULL_INTENSITY;
+	display_buffer3[144 + 15 + 0] = FULL_INTENSITY;
+	display_buffer3[168 +  9 + 0] = FULL_INTENSITY;
+	display_buffer3[168 + 12 + 0] = FULL_INTENSITY;
+
+	memcpy(display_buffer4, display_buffer3, 192);
+	display_buffer4[  0 +  3 + 0] = FULL_INTENSITY;
+	display_buffer4[  0 +  6 + 0] = FULL_INTENSITY;
+	display_buffer4[  0 + 15 + 0] = FULL_INTENSITY;
+	display_buffer4[  0 + 18 + 0] = FULL_INTENSITY;
+	display_buffer4[ 24 +  0 + 0] = FULL_INTENSITY;
+	display_buffer4[ 24 +  9 + 0] = FULL_INTENSITY;
+	display_buffer4[ 24 + 12 + 0] = FULL_INTENSITY;
+	display_buffer4[ 24 + 21 + 0] = FULL_INTENSITY;
+	display_buffer4[120 +  0 + 0] = FULL_INTENSITY;
+	display_buffer4[120 + 21 + 0] = FULL_INTENSITY;
+	display_buffer4[144 +  3 + 0] = FULL_INTENSITY;
+	display_buffer4[144 + 18 + 0] = FULL_INTENSITY;
+	display_buffer4[168 +  6 + 0] = FULL_INTENSITY;
+	display_buffer4[168 + 15 + 0] = FULL_INTENSITY;
+
+	frame = 0;
+	display_addr = display_buffer;
+}
+
+void loop(void)
+{
+	// This code is invoked once each time the LEDs are scanned...
+	if (numFrames > 0)
+		{
+		// Hold current image for some frames
+		numFrames--;
+		return;
+		}
+	numFrames = HOLD_FRAMES;
+
+	switch (frame)
+		{
+		case 0:
+			display_addr = display_buffer1;
+			frame = 1;
+			break;
+
+		case 1:
+			display_addr = display_buffer2;
+			frame = 2;
+			break;
+
+		case 2:
+			display_addr = display_buffer3;
+			frame = 3;
+			break;
+
+		case 3:
+			display_addr = display_buffer4;
+			frame = 4;
+			break;
+
+		case 4:
+			display_addr = display_buffer3;
+			frame = 5;
+			break;
+
+		case 5:
+			display_addr = display_buffer2;
+			frame = 6;
+			break;
+
+		case 6:
+			display_addr = display_buffer1;
+			frame = 7;
+			break;
+
+		case 7:
+			display_addr = display_buffer;
+			frame = 0;
+			break;
+		}
+}
+
+#endif /* DEMO_H_ */

@@ -1,0 +1,166 @@
+/*
+ * demo.fader
+ *
+ * This demo fades between high and low intensities.
+ *
+ */
+
+#ifndef DEMO_H_
+#define DEMO_H_
+
+#define	DEMO
+
+#define	HOLD_FRAMES	0
+
+int	numFrames;
+
+#define PAUSE		20
+
+unsigned int	color;
+unsigned int	index;
+
+void setup(void)
+{
+	// This code is invoked once to initialize the demo...
+
+	numFrames = 0;
+	color = 0;
+	index = 0;
+}
+
+void loop(void)
+{
+	// This code is invoked once each time the LEDs are scanned...
+
+	unsigned char	new_blue;
+	unsigned char	new_green;
+	unsigned char	new_red;
+	unsigned int	col;
+	unsigned int	row;
+	unsigned int	x;
+	unsigned int	new_intensity;
+
+	if (numFrames > 0)
+		{
+		// Hold current image for some frames
+		numFrames--;
+		return;
+		}
+	numFrames = HOLD_FRAMES;
+
+	if (index == 0)
+		{
+		// Next color
+		color++;
+		if (color > 7)
+			color = 1;
+
+		index = (FULL_INTENSITY - 1) * 2 + PAUSE * 3;
+		}
+
+	if ((index > (FULL_INTENSITY - 1) * 2 + PAUSE * 2) || (index <= PAUSE))
+		// Start off and end dim
+		new_intensity = 1;
+	else if (index > (FULL_INTENSITY - 1) + PAUSE * 2)
+		// Fade up
+		new_intensity = (FULL_INTENSITY - 1) * 2 + PAUSE * 2 - index + 1;
+	else if (index > (FULL_INTENSITY - 1) + PAUSE)
+		// Full brightness
+		new_intensity = FULL_INTENSITY;
+	else
+		// Fade down
+		new_intensity = index - PAUSE + 1;
+	index--;
+
+	if (color & 1)
+		new_red = new_intensity;
+	else
+		new_red = 0;
+	if (color & 2)
+		new_green = new_intensity;
+	else
+		new_green = 0;
+	if (color & 4)
+		new_blue = new_intensity;
+	else
+		new_blue = 0;
+	for (row = 0; row < 8; row++)
+		{
+		// Set up left band at lowest on intensity
+		x = row * 8 * 3;
+		if (new_red)
+			{
+			display_buffer[x] = 1;
+			display_buffer[x+3] = 1;
+			}
+		else
+			{
+			display_buffer[x] = 0;
+			display_buffer[x+3] = 0;
+			}
+		if (new_green)
+			{
+			display_buffer[x+1] = 1;
+			display_buffer[x+4] = 1;
+			}
+		else
+			{
+			display_buffer[x+1] = 0;
+			display_buffer[x+4] = 0;
+			}
+		if (new_blue)
+			{
+			display_buffer[x+2] = 1;
+			display_buffer[x+5] = 1;
+			}
+		else
+			{
+			display_buffer[x+2] = 0;
+			display_buffer[x+5] = 0;
+			}
+
+		// Set up the middle
+		for (col = 2; col < 6; col++)
+			{
+			x = (row * 8 + col) * 3;
+			display_buffer[x] = new_red;
+			display_buffer[x+1] = new_green;
+			display_buffer[x+2] = new_blue;
+			}
+
+		// Set up right band at highest on intensity
+		x = (row * 8 + 6) * 3;
+		if (new_red)
+			{
+			display_buffer[x] = FULL_INTENSITY;
+			display_buffer[x+3] = FULL_INTENSITY;
+			}
+		else
+			{
+			display_buffer[x] = 0;
+			display_buffer[x+3] = 0;
+			}
+		if (new_green)
+			{
+			display_buffer[x+1] = FULL_INTENSITY;
+			display_buffer[x+4] = FULL_INTENSITY;
+			}
+		else
+			{
+			display_buffer[x+1] = 0;
+			display_buffer[x+4] = 0;
+			}
+		if (new_blue)
+			{
+			display_buffer[x+2] = FULL_INTENSITY;
+			display_buffer[x+5] = FULL_INTENSITY;
+			}
+		else
+			{
+			display_buffer[x+2] = 0;
+			display_buffer[x+5] = 0;
+			}
+		}
+}
+
+#endif /* DEMO_H_ */

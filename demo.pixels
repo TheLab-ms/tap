@@ -1,0 +1,236 @@
+/*
+ * demo.pixels
+ *
+ * This demo shows pixels in several sizes.
+ *
+ */
+
+#ifndef DEMO_H_
+#define DEMO_H_
+
+#define	DEMO
+
+#define	HOLD_FRAMES	63
+
+int	numFrames;
+
+unsigned char	frame;
+unsigned char	cycles;
+unsigned char	index;
+unsigned char	display_buffer1[192];
+
+#define WIDTH	8
+#define HEIGHT	8
+
+#define MAX_CYCLES	16
+
+void make_1_pixel(void)
+{
+	unsigned char	red = FULL_INTENSITY;
+	unsigned char	green = FULL_INTENSITY;
+	unsigned char	blue = FULL_INTENSITY;
+	unsigned int	i;
+
+	for (i = 0; i < 192; i = i + 3)
+		{
+		display_buffer[i + 0] = red;
+		display_buffer[i + 1] = green;
+		display_buffer[i + 2] = blue;
+
+		display_buffer1[i + 0] = 0;
+		display_buffer1[i + 1] = 0;
+		display_buffer1[i + 2] = 0;
+		}
+}
+
+void make_4_pixels(void)
+{
+	unsigned char	red = FULL_INTENSITY;
+	unsigned char	green = FULL_INTENSITY;
+	unsigned char	blue = FULL_INTENSITY;
+
+	unsigned char	i;
+	unsigned char	j;
+
+	unsigned int	col;
+	unsigned int	row;
+
+	for (row = 0; row < 8; row++)
+		{
+		i = row * 8 * 3;
+
+		for (col = 0; col < 8; col++)
+			{
+			j = col * 3;
+
+			if (row < 4 && col < 4 || row >= 4 && col >= 4)
+				{
+				display_buffer[i + j + 0] = red;
+				display_buffer[i + j + 1] = green;
+				display_buffer[i + j + 2] = blue;
+
+				display_buffer1[i + j + 0] = 0;
+				display_buffer1[i + j + 1] = 0;
+				display_buffer1[i + j + 2] = 0;
+				}
+			else
+				{
+				display_buffer[i + j + 0] = 0;
+				display_buffer[i + j + 1] = 0;
+				display_buffer[i + j + 2] = 0;
+
+				display_buffer1[i + j + 0] = red;
+				display_buffer1[i + j + 1] = green;
+				display_buffer1[i + j + 2] = blue;
+				}
+			}
+		}
+}
+
+void make_16_pixels(void)
+{
+	unsigned char	red = FULL_INTENSITY;
+	unsigned char	green = FULL_INTENSITY;
+	unsigned char	blue = FULL_INTENSITY;
+
+	unsigned char	i;
+	unsigned char	j;
+
+	unsigned int	col;
+	unsigned int	row;
+
+	for (row = 0; row < 8; row++)
+		{
+		i = row * 8 * 3;
+
+		for (col = 0; col < 8; col++)
+			{
+			j = col * 3;
+
+			if (((row & 2) == 0) && ((col & 2) == 0) || (row & 2) && (col & 2))
+				{
+				display_buffer[i + j + 0] = red;
+				display_buffer[i + j + 1] = green;
+				display_buffer[i + j + 2] = blue;
+
+				display_buffer1[i + j + 0] = 0;
+				display_buffer1[i + j + 1] = 0;
+				display_buffer1[i + j + 2] = 0;
+				}
+			else
+				{
+				display_buffer[i + j + 0] = 0;
+				display_buffer[i + j + 1] = 0;
+				display_buffer[i + j + 2] = 0;
+
+				display_buffer1[i + j + 0] = red;
+				display_buffer1[i + j + 1] = green;
+				display_buffer1[i + j + 2] = blue;
+				}
+			}
+		}
+}
+
+void make_64_pixels(void)
+{
+	unsigned char	red = FULL_INTENSITY;
+	unsigned char	green = FULL_INTENSITY;
+	unsigned char	blue = FULL_INTENSITY;
+
+	unsigned char	i;
+	unsigned char	j;
+
+	unsigned int	col;
+	unsigned int	row;
+
+	for (row = 0; row < 8; row++)
+		{
+		i = row * 8 * 3;
+
+		for (col = 0; col < 8; col++)
+			{
+			j = col * 3;
+
+			if (((row & 1) == 0) && ((col & 1) == 0) || (row & 1) && (col & 1))
+				{
+				display_buffer[i + j + 0] = red;
+				display_buffer[i + j + 1] = green;
+				display_buffer[i + j + 2] = blue;
+
+				display_buffer1[i + j + 0] = 0;
+				display_buffer1[i + j + 1] = 0;
+				display_buffer1[i + j + 2] = 0;
+				}
+			else
+				{
+				display_buffer[i + j + 0] = 0;
+				display_buffer[i + j + 1] = 0;
+				display_buffer[i + j + 2] = 0;
+
+				display_buffer1[i + j + 0] = red;
+				display_buffer1[i + j + 1] = green;
+				display_buffer1[i + j + 2] = blue;
+				}
+			}
+		}
+}
+
+void setup(void)
+{
+	// This code is invoked once to initialize the demo...
+
+	index = 3;
+	frame = 1;
+}
+
+void loop(void)
+{
+	// This code is invoked once each time the LEDs are scanned...
+	if (numFrames > 0)
+		{
+		// Hold current image for some frames
+		numFrames--;
+		return;
+		}
+	numFrames = HOLD_FRAMES;
+
+	if (cycles == 0)
+		{
+		if (index == 3)
+			index = 0;
+		else
+			index++;
+
+		switch (index)
+			{
+			case 0:
+				make_1_pixel();
+				break;
+			case 1:
+				make_4_pixels();
+				break;
+			case 2:
+				make_16_pixels();
+				break;
+			case 3:
+				make_64_pixels();
+				break;
+			}
+
+		cycles = MAX_CYCLES;
+		}
+	cycles--;
+
+	if (frame == 0)
+		{
+		display_addr = display_buffer1;
+		frame = 1;
+		}
+	else
+		{
+		display_addr = display_buffer;
+		frame = 0;
+		}
+}
+
+#endif /* DEMO_H_ */

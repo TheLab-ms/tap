@@ -1,0 +1,324 @@
+/*
+ * demo.flipper
+ *
+ * This demo flips rapidly between bitmapped images.
+ *
+ */
+
+#ifndef DEMO_H_
+#define DEMO_H_
+
+#define	DEMO
+
+#define	HOLD_FRAMES	3
+
+int	numFrames;
+
+unsigned int	frame;
+unsigned int	num_scans;
+unsigned int	num_cycles;
+unsigned int	faster;
+
+#define WIDTH	8
+#define HEIGHT	8
+
+#define MIN_CYCLES	2
+#define MAX_CYCLES	16
+
+unsigned char	display_buffer1[192];
+unsigned char	display_buffer2[192];
+unsigned char	display_buffer3[192];
+
+void setup(void)
+{
+	// This code is invoked once to initialize the demo...
+
+	display_buffer[  0 +  9 + 0] = FULL_INTENSITY;
+	display_buffer[  0 +  9 + 1] = FULL_INTENSITY;
+	display_buffer[  0 +  9 + 2] = FULL_INTENSITY;
+	display_buffer[  0 + 12 + 0] = FULL_INTENSITY;
+	display_buffer[  0 + 12 + 1] = FULL_INTENSITY;
+	display_buffer[  0 + 12 + 2] = FULL_INTENSITY;
+	display_buffer[  0 + 15 + 0] = FULL_INTENSITY;
+	display_buffer[  0 + 15 + 1] = FULL_INTENSITY;
+	display_buffer[  0 + 15 + 2] = FULL_INTENSITY;
+	display_buffer[  0 + 18 + 0] = FULL_INTENSITY;
+	display_buffer[  0 + 18 + 1] = FULL_INTENSITY;
+	display_buffer[  0 + 18 + 2] = FULL_INTENSITY;
+	display_buffer[  0 + 21 + 0] = FULL_INTENSITY;
+	display_buffer[  0 + 21 + 1] = FULL_INTENSITY;
+	display_buffer[  0 + 21 + 2] = FULL_INTENSITY;
+	display_buffer[ 24 + 15 + 0] = FULL_INTENSITY;
+	display_buffer[ 24 + 15 + 1] = FULL_INTENSITY;
+	display_buffer[ 24 + 15 + 2] = FULL_INTENSITY;
+	display_buffer[ 24 + 18 + 0] = FULL_INTENSITY;
+	display_buffer[ 24 + 18 + 1] = FULL_INTENSITY;
+	display_buffer[ 24 + 18 + 2] = FULL_INTENSITY;
+	display_buffer[ 24 + 21 + 0] = FULL_INTENSITY;
+	display_buffer[ 24 + 21 + 1] = FULL_INTENSITY;
+	display_buffer[ 24 + 21 + 2] = FULL_INTENSITY;
+	display_buffer[ 48 + 15 + 0] = FULL_INTENSITY;
+	display_buffer[ 48 + 15 + 1] = FULL_INTENSITY;
+	display_buffer[ 48 + 15 + 2] = FULL_INTENSITY;
+	display_buffer[ 48 + 18 + 0] = FULL_INTENSITY;
+	display_buffer[ 48 + 18 + 1] = FULL_INTENSITY;
+	display_buffer[ 48 + 18 + 2] = FULL_INTENSITY;
+	display_buffer[ 48 + 21 + 0] = FULL_INTENSITY;
+	display_buffer[ 48 + 21 + 1] = FULL_INTENSITY;
+	display_buffer[ 48 + 21 + 2] = FULL_INTENSITY;
+	display_buffer[ 72 + 12 + 0] = FULL_INTENSITY;
+	display_buffer[ 72 + 12 + 1] = FULL_INTENSITY;
+	display_buffer[ 72 + 12 + 2] = FULL_INTENSITY;
+	display_buffer[ 72 + 21 + 0] = FULL_INTENSITY;
+	display_buffer[ 72 + 21 + 1] = FULL_INTENSITY;
+	display_buffer[ 72 + 21 + 2] = FULL_INTENSITY;
+	display_buffer[ 96 +  9 + 0] = FULL_INTENSITY;
+	display_buffer[ 96 +  9 + 1] = FULL_INTENSITY;
+	display_buffer[ 96 +  9 + 2] = FULL_INTENSITY;
+	display_buffer[ 96 + 21 + 0] = FULL_INTENSITY;
+	display_buffer[ 96 + 21 + 1] = FULL_INTENSITY;
+	display_buffer[ 96 + 21 + 2] = FULL_INTENSITY;
+	display_buffer[120 +  6 + 0] = FULL_INTENSITY;
+	display_buffer[120 +  6 + 1] = FULL_INTENSITY;
+	display_buffer[120 +  6 + 2] = FULL_INTENSITY;
+	display_buffer[144 +  3 + 0] = FULL_INTENSITY;
+	display_buffer[144 +  3 + 1] = FULL_INTENSITY;
+	display_buffer[144 +  3 + 2] = FULL_INTENSITY;
+	display_buffer[168 +  0 + 0] = FULL_INTENSITY;
+	display_buffer[168 +  0 + 1] = FULL_INTENSITY;
+	display_buffer[168 +  0 + 2] = FULL_INTENSITY;
+
+	display_buffer1[  0 +  0 + 0] = FULL_INTENSITY;
+	display_buffer1[  0 +  0 + 1] = FULL_INTENSITY;
+	display_buffer1[  0 +  0 + 2] = FULL_INTENSITY;
+	display_buffer1[ 24 +  3 + 0] = FULL_INTENSITY;
+	display_buffer1[ 24 +  3 + 1] = FULL_INTENSITY;
+	display_buffer1[ 24 +  3 + 2] = FULL_INTENSITY;
+	display_buffer1[ 48 +  6 + 0] = FULL_INTENSITY;
+	display_buffer1[ 48 +  6 + 1] = FULL_INTENSITY;
+	display_buffer1[ 48 +  6 + 2] = FULL_INTENSITY;
+	display_buffer1[ 72 +  9 + 0] = FULL_INTENSITY;
+	display_buffer1[ 72 +  9 + 1] = FULL_INTENSITY;
+	display_buffer1[ 72 +  9 + 2] = FULL_INTENSITY;
+	display_buffer1[ 72 + 21 + 0] = FULL_INTENSITY;
+	display_buffer1[ 72 + 21 + 1] = FULL_INTENSITY;
+	display_buffer1[ 72 + 21 + 2] = FULL_INTENSITY;
+	display_buffer1[ 96 + 12 + 0] = FULL_INTENSITY;
+	display_buffer1[ 96 + 12 + 1] = FULL_INTENSITY;
+	display_buffer1[ 96 + 12 + 2] = FULL_INTENSITY;
+	display_buffer1[ 96 + 21 + 0] = FULL_INTENSITY;
+	display_buffer1[ 96 + 21 + 1] = FULL_INTENSITY;
+	display_buffer1[ 96 + 21 + 2] = FULL_INTENSITY;
+	display_buffer1[120 + 15 + 0] = FULL_INTENSITY;
+	display_buffer1[120 + 15 + 1] = FULL_INTENSITY;
+	display_buffer1[120 + 18 + 2] = FULL_INTENSITY;
+	display_buffer1[120 + 18 + 0] = FULL_INTENSITY;
+	display_buffer1[120 + 18 + 1] = FULL_INTENSITY;
+	display_buffer1[120 + 15 + 2] = FULL_INTENSITY;
+	display_buffer1[120 + 21 + 0] = FULL_INTENSITY;
+	display_buffer1[120 + 21 + 1] = FULL_INTENSITY;
+	display_buffer1[120 + 21 + 2] = FULL_INTENSITY;
+	display_buffer1[144 + 15 + 0] = FULL_INTENSITY;
+	display_buffer1[144 + 15 + 1] = FULL_INTENSITY;
+	display_buffer1[144 + 15 + 2] = FULL_INTENSITY;
+	display_buffer1[144 + 18 + 0] = FULL_INTENSITY;
+	display_buffer1[144 + 18 + 1] = FULL_INTENSITY;
+	display_buffer1[144 + 18 + 2] = FULL_INTENSITY;
+	display_buffer1[144 + 21 + 0] = FULL_INTENSITY;
+	display_buffer1[144 + 21 + 1] = FULL_INTENSITY;
+	display_buffer1[144 + 21 + 2] = FULL_INTENSITY;
+	display_buffer1[168 +  9 + 0] = FULL_INTENSITY;
+	display_buffer1[168 +  9 + 1] = FULL_INTENSITY;
+	display_buffer1[168 +  9 + 2] = FULL_INTENSITY;
+	display_buffer1[168 + 12 + 0] = FULL_INTENSITY;
+	display_buffer1[168 + 12 + 1] = FULL_INTENSITY;
+	display_buffer1[168 + 12 + 2] = FULL_INTENSITY;
+	display_buffer1[168 + 15 + 0] = FULL_INTENSITY;
+	display_buffer1[168 + 15 + 1] = FULL_INTENSITY;
+	display_buffer1[168 + 15 + 2] = FULL_INTENSITY;
+	display_buffer1[168 + 18 + 0] = FULL_INTENSITY;
+	display_buffer1[168 + 18 + 1] = FULL_INTENSITY;
+	display_buffer1[168 + 18 + 2] = FULL_INTENSITY;
+	display_buffer1[168 + 21 + 0] = FULL_INTENSITY;
+	display_buffer1[168 + 21 + 1] = FULL_INTENSITY;
+	display_buffer1[168 + 21 + 2] = FULL_INTENSITY;
+
+	display_buffer2[  0 + 21 + 0] = FULL_INTENSITY;
+	display_buffer2[  0 + 21 + 1] = FULL_INTENSITY;
+	display_buffer2[  0 + 21 + 2] = FULL_INTENSITY;
+	display_buffer2[ 24 + 18 + 0] = FULL_INTENSITY;
+	display_buffer2[ 24 + 18 + 1] = FULL_INTENSITY;
+	display_buffer2[ 24 + 18 + 2] = FULL_INTENSITY;
+	display_buffer2[ 48 + 15 + 0] = FULL_INTENSITY;
+	display_buffer2[ 48 + 15 + 1] = FULL_INTENSITY;
+	display_buffer2[ 48 + 15 + 2] = FULL_INTENSITY;
+	display_buffer2[ 72 +  0 + 0] = FULL_INTENSITY;
+	display_buffer2[ 72 +  0 + 1] = FULL_INTENSITY;
+	display_buffer2[ 72 +  0 + 2] = FULL_INTENSITY;
+	display_buffer2[ 72 + 12 + 0] = FULL_INTENSITY;
+	display_buffer2[ 72 + 12 + 1] = FULL_INTENSITY;
+	display_buffer2[ 72 + 12 + 2] = FULL_INTENSITY;
+	display_buffer2[ 96 +  0 + 0] = FULL_INTENSITY;
+	display_buffer2[ 96 +  0 + 1] = FULL_INTENSITY;
+	display_buffer2[ 96 +  0 + 2] = FULL_INTENSITY;
+	display_buffer2[ 96 +  9 + 0] = FULL_INTENSITY;
+	display_buffer2[ 96 +  9 + 1] = FULL_INTENSITY;
+	display_buffer2[ 96 +  9 + 2] = FULL_INTENSITY;
+	display_buffer2[120 +  0 + 0] = FULL_INTENSITY;
+	display_buffer2[120 +  0 + 1] = FULL_INTENSITY;
+	display_buffer2[120 +  0 + 2] = FULL_INTENSITY;
+	display_buffer2[120 +  3 + 0] = FULL_INTENSITY;
+	display_buffer2[120 +  3 + 1] = FULL_INTENSITY;
+	display_buffer2[120 +  3 + 2] = FULL_INTENSITY;
+	display_buffer2[120 +  6 + 0] = FULL_INTENSITY;
+	display_buffer2[120 +  6 + 1] = FULL_INTENSITY;
+	display_buffer2[120 +  6 + 2] = FULL_INTENSITY;
+	display_buffer2[144 +  0 + 0] = FULL_INTENSITY;
+	display_buffer2[144 +  0 + 1] = FULL_INTENSITY;
+	display_buffer2[144 +  0 + 2] = FULL_INTENSITY;
+	display_buffer2[144 +  3 + 0] = FULL_INTENSITY;
+	display_buffer2[144 +  3 + 1] = FULL_INTENSITY;
+	display_buffer2[144 +  3 + 2] = FULL_INTENSITY;
+	display_buffer2[144 +  6 + 0] = FULL_INTENSITY;
+	display_buffer2[144 +  6 + 1] = FULL_INTENSITY;
+	display_buffer2[144 +  6 + 2] = FULL_INTENSITY;
+	display_buffer2[168 +  0 + 0] = FULL_INTENSITY;
+	display_buffer2[168 +  0 + 1] = FULL_INTENSITY;
+	display_buffer2[168 +  0 + 2] = FULL_INTENSITY;
+	display_buffer2[168 +  3 + 0] = FULL_INTENSITY;
+	display_buffer2[168 +  3 + 1] = FULL_INTENSITY;
+	display_buffer2[168 +  3 + 2] = FULL_INTENSITY;
+	display_buffer2[168 +  6 + 0] = FULL_INTENSITY;
+	display_buffer2[168 +  6 + 1] = FULL_INTENSITY;
+	display_buffer2[168 +  6 + 2] = FULL_INTENSITY;
+	display_buffer2[168 +  9 + 0] = FULL_INTENSITY;
+	display_buffer2[168 +  9 + 1] = FULL_INTENSITY;
+	display_buffer2[168 +  9 + 2] = FULL_INTENSITY;
+	display_buffer2[168 + 12 + 0] = FULL_INTENSITY;
+	display_buffer2[168 + 12 + 1] = FULL_INTENSITY;
+	display_buffer2[168 + 12 + 2] = FULL_INTENSITY;
+
+	display_buffer3[  0 +  0 + 0] = FULL_INTENSITY;
+	display_buffer3[  0 +  0 + 1] = FULL_INTENSITY;
+	display_buffer3[  0 +  0 + 2] = FULL_INTENSITY;
+	display_buffer3[  0 +  3 + 0] = FULL_INTENSITY;
+	display_buffer3[  0 +  3 + 1] = FULL_INTENSITY;
+	display_buffer3[  0 +  3 + 2] = FULL_INTENSITY;
+	display_buffer3[  0 +  6 + 0] = FULL_INTENSITY;
+	display_buffer3[  0 +  6 + 1] = FULL_INTENSITY;
+	display_buffer3[  0 +  6 + 2] = FULL_INTENSITY;
+	display_buffer3[  0 +  9 + 0] = FULL_INTENSITY;
+	display_buffer3[  0 +  9 + 1] = FULL_INTENSITY;
+	display_buffer3[  0 +  9 + 2] = FULL_INTENSITY;
+	display_buffer3[  0 + 12 + 0] = FULL_INTENSITY;
+	display_buffer3[  0 + 12 + 1] = FULL_INTENSITY;
+	display_buffer3[  0 + 12 + 2] = FULL_INTENSITY;
+	display_buffer3[ 24 +  0 + 0] = FULL_INTENSITY;
+	display_buffer3[ 24 +  0 + 1] = FULL_INTENSITY;
+	display_buffer3[ 24 +  0 + 2] = FULL_INTENSITY;
+	display_buffer3[ 24 +  3 + 0] = FULL_INTENSITY;
+	display_buffer3[ 24 +  3 + 1] = FULL_INTENSITY;
+	display_buffer3[ 24 +  3 + 2] = FULL_INTENSITY;
+	display_buffer3[ 24 +  6 + 0] = FULL_INTENSITY;
+	display_buffer3[ 24 +  6 + 1] = FULL_INTENSITY;
+	display_buffer3[ 24 +  6 + 2] = FULL_INTENSITY;
+	display_buffer3[ 48 +  0 + 0] = FULL_INTENSITY;
+	display_buffer3[ 48 +  0 + 1] = FULL_INTENSITY;
+	display_buffer3[ 48 +  0 + 2] = FULL_INTENSITY;
+	display_buffer3[ 48 +  3 + 0] = FULL_INTENSITY;
+	display_buffer3[ 48 +  3 + 1] = FULL_INTENSITY;
+	display_buffer3[ 48 +  3 + 2] = FULL_INTENSITY;
+	display_buffer3[ 48 +  6 + 0] = FULL_INTENSITY;
+	display_buffer3[ 48 +  6 + 1] = FULL_INTENSITY;
+	display_buffer3[ 48 +  6 + 2] = FULL_INTENSITY;
+	display_buffer3[ 72 +  0 + 0] = FULL_INTENSITY;
+	display_buffer3[ 72 +  0 + 1] = FULL_INTENSITY;
+	display_buffer3[ 72 +  0 + 2] = FULL_INTENSITY;
+	display_buffer3[ 72 +  9 + 0] = FULL_INTENSITY;
+	display_buffer3[ 72 +  9 + 1] = FULL_INTENSITY;
+	display_buffer3[ 72 +  9 + 2] = FULL_INTENSITY;
+	display_buffer3[ 96 +  0 + 0] = FULL_INTENSITY;
+	display_buffer3[ 96 +  0 + 1] = FULL_INTENSITY;
+	display_buffer3[ 96 +  0 + 2] = FULL_INTENSITY;
+	display_buffer3[ 96 + 12 + 0] = FULL_INTENSITY;
+	display_buffer3[ 96 + 12 + 1] = FULL_INTENSITY;
+	display_buffer3[ 96 + 12 + 2] = FULL_INTENSITY;
+	display_buffer3[120 + 15 + 0] = FULL_INTENSITY;
+	display_buffer3[120 + 15 + 1] = FULL_INTENSITY;
+	display_buffer3[120 + 15 + 2] = FULL_INTENSITY;
+	display_buffer3[144 + 18 + 0] = FULL_INTENSITY;
+	display_buffer3[144 + 18 + 1] = FULL_INTENSITY;
+	display_buffer3[144 + 18 + 2] = FULL_INTENSITY;
+	display_buffer3[168 + 21 + 0] = FULL_INTENSITY;
+	display_buffer3[168 + 21 + 1] = FULL_INTENSITY;
+	display_buffer3[168 + 21 + 2] = FULL_INTENSITY;
+
+	frame = 0;
+	numFrames = 0;
+	num_scans = HOLD_FRAMES;
+	num_cycles = MAX_CYCLES;
+	faster = 1;
+	display_addr = display_buffer;
+}
+
+void loop(void)
+{
+	// This code is invoked once each time the LEDs are scanned...
+	if (numFrames > 0)
+		{
+		// Hold current image for some frames
+		numFrames--;
+		return;
+		}
+	numFrames = num_cycles;
+
+	switch (frame)
+		{
+		case 0:
+			display_addr = display_buffer1;
+			frame = 1;
+			break;
+
+		case 1:
+			display_addr = display_buffer2;
+			frame = 2;
+			break;
+
+		case 2:
+			display_addr = display_buffer3;
+			frame = 3;
+			break;
+
+		case 3:
+			display_addr = display_buffer;
+			frame = 0;
+
+			if (num_scans == 0)
+				{
+				if (faster)
+					{
+					if (num_cycles <= MIN_CYCLES)
+						faster = 0;
+					}
+				else
+					{
+					if (num_cycles >= MAX_CYCLES)
+						faster = 1;
+					}
+				if (faster)
+					{
+					num_cycles--;
+					}
+				else
+					{
+					num_cycles++;
+					}
+				num_scans = HOLD_FRAMES;
+				}
+			else
+				num_scans--;
+			break;
+		}
+}
+
+#endif /* DEMO_H_ */

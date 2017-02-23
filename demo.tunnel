@@ -1,0 +1,191 @@
+/*
+ * demo.tunnel
+ *
+ * This demo simulates going through a multicolored tunnel.
+ *
+ */
+
+#ifndef DEMO_H_
+#define DEMO_H_
+
+#define	DEMO
+
+#define	HOLD_FRAMES	0
+
+int	numFrames;
+
+unsigned char	color;
+unsigned char	index;
+unsigned char	new_blue;
+unsigned char	new_green;
+unsigned char	new_red;
+
+void setup(void)
+{
+	// This code is invoked once to initialize the demo...
+
+	numFrames = 0;
+	color = 0;
+	index = 0;
+}
+
+void increment_intensity(void)
+{
+	unsigned int	i;
+
+	// Increment intensity if not 0 and not max
+	for (i = 0; i < 192; i++)
+		if (display_buffer[i] && display_buffer[i] < FULL_INTENSITY)
+			display_buffer[i]++;
+}
+
+void decrement_intensity(void)
+{
+	unsigned int	i;
+
+	// Decrement intensity if not 0 and not max
+	for (i = 0; i < 192; i++)
+		if (display_buffer[i] && display_buffer[i] < FULL_INTENSITY)
+			display_buffer[i]--;
+}
+
+void loop(void)
+{
+	// This code is invoked once each time the LEDs are scanned...
+
+	unsigned int	i;
+
+	if (numFrames > 0)
+		{
+		// Hold current image for some frames
+		numFrames--;
+		return;
+		}
+	numFrames = HOLD_FRAMES;
+
+	if (index == 0)
+		{
+		// Next color
+		color++;
+		if (color > 7)
+			color = 1;
+
+		if (color & 1)
+			new_red = 1;
+		else
+			new_red = 0;
+		if (color & 2)
+			new_green = 1;
+		else
+			new_green = 0;
+		if (color & 4)
+			new_blue = 1;
+		else
+			new_blue = 0;
+
+		index = 112;
+		}
+
+	increment_intensity();
+	if (index == 112)
+		{
+		// Turn on center
+		display_buffer[ 72 +  9 + 0] = new_red;
+		display_buffer[ 72 +  9 + 1] = new_green;
+		display_buffer[ 72 +  9 + 2] = new_blue;
+
+		display_buffer[ 72 + 12 + 0] = new_red;
+		display_buffer[ 72 + 12 + 1] = new_green;
+		display_buffer[ 72 + 12 + 2] = new_blue;
+
+		display_buffer[ 96 +  9 + 0] = new_red;
+		display_buffer[ 96 +  9 + 1] = new_green;
+		display_buffer[ 96 +  9 + 2] = new_blue;
+
+		display_buffer[ 96 + 12 + 0] = new_red;
+		display_buffer[ 96 + 12 + 1] = new_green;
+		display_buffer[ 96 + 12 + 2] = new_blue;
+		}
+	else if (index == 96)
+		{
+		// Turn on inner ring
+		for (i = 6; i <= 15; i = i + 3)
+			{
+			display_buffer[ 48 +  i + 0] = new_red;
+			display_buffer[ 48 +  i + 1] = new_green;
+			display_buffer[ 48 +  i + 2] = new_blue;
+
+			display_buffer[120 +  i + 0] = new_red;
+			display_buffer[120 +  i + 1] = new_green;
+			display_buffer[120 +  i + 2] = new_blue;
+			}
+
+		display_buffer[ 72 +  6 + 0] = new_red;
+		display_buffer[ 72 +  6 + 1] = new_green;
+		display_buffer[ 72 +  6 + 2] = new_blue;
+
+		display_buffer[ 96 +  6 + 0] = new_red;
+		display_buffer[ 96 +  6 + 1] = new_green;
+		display_buffer[ 96 +  6 + 2] = new_blue;
+
+		display_buffer[ 72 + 15 + 0] = new_red;
+		display_buffer[ 72 + 15 + 1] = new_green;
+		display_buffer[ 72 + 15 + 2] = new_blue;
+
+		display_buffer[ 96 + 15 + 0] = new_red;
+		display_buffer[ 96 + 15 + 1] = new_green;
+		display_buffer[ 96 + 15 + 2] = new_blue;
+		}
+	else if (index == 80)
+		{
+		// Turn on middle ring
+		for (i = 3; i <= 18; i = i + 3)
+			{
+			display_buffer[ 24 +  i + 0] = new_red;
+			display_buffer[ 24 +  i + 1] = new_green;
+			display_buffer[ 24 +  i + 2] = new_blue;
+
+			display_buffer[144 +  i + 0] = new_red;
+			display_buffer[144 +  i + 1] = new_green;
+			display_buffer[144 +  i + 2] = new_blue;
+			}
+		for (i = 48; i <= 120; i = i + 24)
+			{
+			display_buffer[ i +  3 + 0] = new_red;
+			display_buffer[ i +  3 + 1] = new_green;
+			display_buffer[ i +  3 + 2] = new_blue;
+
+			display_buffer[ i + 18 + 0] = new_red;
+			display_buffer[ i + 18 + 1] = new_green;
+			display_buffer[ i + 18 + 2] = new_blue;
+			}
+		}
+	else if (index == 64)
+		{
+		// Turn on outer ring
+		for (i = 0; i <= 21; i = i + 3)
+			{
+			display_buffer[  0 +  i + 0] = new_red;
+			display_buffer[  0 +  i + 1] = new_green;
+			display_buffer[  0 +  i + 2] = new_blue;
+
+			display_buffer[168 +  i + 0] = new_red;
+			display_buffer[168 +  i + 1] = new_green;
+			display_buffer[168 +  i + 2] = new_blue;
+			}
+		for (i = 24; i <= 144; i = i + 24)
+			{
+			display_buffer[ i +  0 + 0] = new_red;
+			display_buffer[ i +  0 + 1] = new_green;
+			display_buffer[ i +  0 + 2] = new_blue;
+
+			display_buffer[ i + 21 + 0] = new_red;
+			display_buffer[ i + 21 + 1] = new_green;
+			display_buffer[ i + 21 + 2] = new_blue;
+			}
+		}
+
+	index--;
+}
+
+#endif /* DEMO_H_ */

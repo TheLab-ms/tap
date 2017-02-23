@@ -1,0 +1,80 @@
+/*
+ * demo.intensity
+ *
+ * This demo shows the dynamic range of intensities.
+ *
+ */
+
+#ifndef DEMO_H_
+#define DEMO_H_
+
+#define	DEMO
+
+#define	HOLD_FRAMES	500
+
+int	numFrames;
+
+unsigned int	color;
+
+void fill_display(void)
+{
+	unsigned int	intensity;
+	unsigned int	i;
+	unsigned int	j;
+
+	j = 0;
+	for (i = 0; i < 64; i++)
+		{
+		// Use full range of intensities
+		intensity = (i << 2) + 1;
+
+		if (color & 1)
+			// Red
+			display_buffer[j] = intensity;
+		else
+			display_buffer[j] = 0;
+
+		if (color & 2)
+			// Green
+			display_buffer[j + 1] = intensity;
+		else
+			display_buffer[j + 1] = 0;
+
+		if (color & 4)
+			// Blue
+			display_buffer[j + 2] = intensity;
+		else
+			display_buffer[j + 2] = 0;
+
+		j = j + 3;
+		}
+}
+
+void setup(void)
+{
+	// This code is invoked once to initialize the demo...
+
+	color = 0;
+	fill_display();
+}
+
+void loop(void)
+{
+	// This code is invoked once each time the LEDs are scanned...
+	if (numFrames > 0)
+		{
+		// Hold current image for some frames
+		numFrames--;
+		return;
+		}
+	numFrames = HOLD_FRAMES;
+
+	if (color >= 7)
+		color = 1;
+	else
+		color++;
+
+	fill_display();
+}
+
+#endif /* DEMO_H_ */

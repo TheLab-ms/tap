@@ -1,0 +1,159 @@
+/*
+ * demo.glider
+ *
+ * This demo repeats the glider from Conway's Game of Life.
+ *
+ */
+
+#ifndef DEMO_H_
+#define DEMO_H_
+
+#define	DEMO
+
+#include <string.h>
+
+#define	HOLD_FRAMES	7
+
+int	numFrames;
+
+unsigned int	color;
+unsigned int	generation;
+
+#define GUTTER	5	/* Unseen cells to simulate infinite playfield */
+unsigned char	New[GUTTER*2 + 8][GUTTER*2 + 8];
+unsigned char	Old[GUTTER*2 + 8][GUTTER*2 + 8];
+
+void create_glider(void)
+{
+	New[2][3] = 1;
+	New[3][4] = 1;
+	New[4][2] = 1;
+	New[4][3] = 1;
+	New[4][4] = 1;
+}
+
+void setup(void)
+{
+	// This code is invoked once to initialize the demo...
+
+	memset(Old, 0, sizeof(Old));
+	generation = 0;
+	color = 1;
+}
+
+void new_generation(void)
+{
+	unsigned int	i;
+	unsigned int	j;
+	unsigned int	neighbors;
+
+	memset(New, 0, sizeof(New));
+	for (i = 1; i < 8 + GUTTER * 2 - 1; i++)
+		for (j = 1; j < 8 + GUTTER * 2 - 1; j++)
+			{
+			neighbors = 0;
+			if (Old[i - 1][j - 1])
+				neighbors++;
+			if (Old[i - 1][j])
+				neighbors++;
+			if (Old[i - 1][j + 1])
+				neighbors++;
+			if (Old[i][j - 1])
+				neighbors++;
+			if (Old[i][j + 1])
+				neighbors++;
+			if (Old[i + 1][j - 1])
+				neighbors++;
+			if (Old[i + 1][j])
+				neighbors++;
+			if (Old[i + 1][j + 1])
+				neighbors++;
+
+			if (Old[i][j])
+				{
+				// Cell is live
+				if (neighbors == 2 || neighbors == 3)
+					// Cell survives
+					New[i][j] = 1;
+				}
+			else
+				{
+				// Cell is dead
+				if (neighbors == 3)
+					// A new cell is born
+					New[i][j] = 1;
+				}
+			}
+	if (generation == 0)
+		{
+		if (color >= 7)
+			color = 1;
+		else
+			color++;
+		create_glider();
+		generation = 39;
+		}
+	else
+		generation--;
+}
+
+void display_new(void)
+{
+	unsigned char	red_intensity;
+	unsigned char	green_intensity;
+	unsigned char	blue_intensity;
+	unsigned int	i;
+	unsigned int	j;
+	unsigned int	row;
+
+	if (color & 1)
+		red_intensity = FULL_INTENSITY;
+	else
+		red_intensity = 0;
+
+	if (color & 2)
+		green_intensity = FULL_INTENSITY;
+	else
+		green_intensity = 0;
+
+	if (color & 4)
+		blue_intensity = FULL_INTENSITY;
+	else
+		blue_intensity = 0;
+
+	for (i = 0; i < 8; i++)
+		{
+		row = i * 8 * 3;
+		for (j = 0; j < 8; j++)
+			if (New[i + GUTTER][j + GUTTER])
+				{
+				display_buffer[row + j * 3 + 0] = red_intensity;
+				display_buffer[row + j * 3 + 1] = green_intensity;
+				display_buffer[row + j * 3 + 2] = blue_intensity;
+				}
+		}
+}
+
+void loop(void)
+{
+	// This code is invoked once each time the LEDs are scanned...
+
+	if (numFrames > 0)
+		{
+		// Hold current image for some frames
+		numFrames--;
+		return;
+		}
+	numFrames = HOLD_FRAMES;
+
+	// Clear last generation from video buffer
+	fillRect(display_addr, 0, 0, 8, 8, 0, 0, 0);
+
+	new_generation();
+
+	display_new();
+
+	memcpy(Old, New, sizeof(Old));
+}
+
+#endif /* DEMO_H_ */

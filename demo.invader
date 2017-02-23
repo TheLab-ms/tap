@@ -1,0 +1,201 @@
+/*
+ * demo.invader
+ *
+ * This demo is an animated Space Invader.
+ *
+ */
+
+#ifndef DEMO_H_
+#define DEMO_H_
+
+#define	DEMO
+
+#define	HOLD_FRAMES	30
+
+int	frame;
+int	numFrames;
+
+unsigned char	display_buffer2[8 * 8 * 3];
+
+void setup(void)
+{
+	// This code is invoked once to initialize the demo...
+
+	// Clear display
+	fillRect(display_buffer, 0, 0, 8, 8, 0, 0, 0);
+
+	// Draw common parts of the body
+	display_buffer[ROW0 + COL3 + RED] = FULL_INTENSITY;
+	display_buffer[ROW0 + COL3 + GREEN] = FULL_INTENSITY;
+	display_buffer[ROW0 + COL3 + BLUE] = FULL_INTENSITY;
+	display_buffer[ROW0 + COL4 + RED] = FULL_INTENSITY;
+	display_buffer[ROW0 + COL4 + GREEN] = FULL_INTENSITY;
+	display_buffer[ROW0 + COL4 + BLUE] = FULL_INTENSITY;
+
+	display_buffer[ROW1 + COL2 + RED] = FULL_INTENSITY;
+	display_buffer[ROW1 + COL2 + GREEN] = FULL_INTENSITY;
+	display_buffer[ROW1 + COL2 + BLUE] = FULL_INTENSITY;
+	display_buffer[ROW1 + COL3 + RED] = FULL_INTENSITY;
+	display_buffer[ROW1 + COL3 + GREEN] = FULL_INTENSITY;
+	display_buffer[ROW1 + COL3 + BLUE] = FULL_INTENSITY;
+	display_buffer[ROW1 + COL4 + RED] = FULL_INTENSITY;
+	display_buffer[ROW1 + COL4 + GREEN] = FULL_INTENSITY;
+	display_buffer[ROW1 + COL4 + BLUE] = FULL_INTENSITY;
+	display_buffer[ROW1 + COL5 + RED] = FULL_INTENSITY;
+	display_buffer[ROW1 + COL5 + GREEN] = FULL_INTENSITY;
+	display_buffer[ROW1 + COL5 + BLUE] = FULL_INTENSITY;
+
+	display_buffer[ROW2 + COL1 + RED] = FULL_INTENSITY;
+	display_buffer[ROW2 + COL1 + GREEN] = FULL_INTENSITY;
+	display_buffer[ROW2 + COL1 + BLUE] = FULL_INTENSITY;
+	display_buffer[ROW2 + COL2 + RED] = FULL_INTENSITY;
+	display_buffer[ROW2 + COL2 + GREEN] = FULL_INTENSITY;
+	display_buffer[ROW2 + COL2 + BLUE] = FULL_INTENSITY;
+	display_buffer[ROW2 + COL3 + RED] = FULL_INTENSITY;
+	display_buffer[ROW2 + COL3 + GREEN] = FULL_INTENSITY;
+	display_buffer[ROW2 + COL3 + BLUE] = FULL_INTENSITY;
+	display_buffer[ROW2 + COL4 + RED] = FULL_INTENSITY;
+	display_buffer[ROW2 + COL4 + GREEN] = FULL_INTENSITY;
+	display_buffer[ROW2 + COL4 + BLUE] = FULL_INTENSITY;
+	display_buffer[ROW2 + COL5 + RED] = FULL_INTENSITY;
+	display_buffer[ROW2 + COL5 + GREEN] = FULL_INTENSITY;
+	display_buffer[ROW2 + COL5 + BLUE] = FULL_INTENSITY;
+	display_buffer[ROW2 + COL6 + RED] = FULL_INTENSITY;
+	display_buffer[ROW2 + COL6 + GREEN] = FULL_INTENSITY;
+	display_buffer[ROW2 + COL6 + BLUE] = FULL_INTENSITY;
+
+	display_buffer[ROW3 + COL0 + RED] = FULL_INTENSITY;
+	display_buffer[ROW3 + COL0 + GREEN] = FULL_INTENSITY;
+	display_buffer[ROW3 + COL0 + BLUE] = FULL_INTENSITY;
+	display_buffer[ROW3 + COL1 + RED] = FULL_INTENSITY;
+	display_buffer[ROW3 + COL1 + GREEN] = FULL_INTENSITY;
+	display_buffer[ROW3 + COL1 + BLUE] = FULL_INTENSITY;
+	display_buffer[ROW3 + COL3 + RED] = FULL_INTENSITY;
+	display_buffer[ROW3 + COL3 + GREEN] = FULL_INTENSITY;
+	display_buffer[ROW3 + COL3 + BLUE] = FULL_INTENSITY;
+	display_buffer[ROW3 + COL4 + RED] = FULL_INTENSITY;
+	display_buffer[ROW3 + COL4 + GREEN] = FULL_INTENSITY;
+	display_buffer[ROW3 + COL4 + BLUE] = FULL_INTENSITY;
+	display_buffer[ROW3 + COL6 + RED] = FULL_INTENSITY;
+	display_buffer[ROW3 + COL6 + GREEN] = FULL_INTENSITY;
+	display_buffer[ROW3 + COL6 + BLUE] = FULL_INTENSITY;
+	display_buffer[ROW3 + COL7 + RED] = FULL_INTENSITY;
+	display_buffer[ROW3 + COL7 + GREEN] = FULL_INTENSITY;
+	display_buffer[ROW3 + COL7 + BLUE] = FULL_INTENSITY;
+
+	display_buffer[ROW4 + COL0 + RED] = FULL_INTENSITY;
+	display_buffer[ROW4 + COL0 + GREEN] = FULL_INTENSITY;
+	display_buffer[ROW4 + COL0 + BLUE] = FULL_INTENSITY;
+	display_buffer[ROW4 + COL1 + RED] = FULL_INTENSITY;
+	display_buffer[ROW4 + COL1 + GREEN] = FULL_INTENSITY;
+	display_buffer[ROW4 + COL1 + BLUE] = FULL_INTENSITY;
+	display_buffer[ROW4 + COL2 + RED] = FULL_INTENSITY;
+	display_buffer[ROW4 + COL2 + GREEN] = FULL_INTENSITY;
+	display_buffer[ROW4 + COL2 + BLUE] = FULL_INTENSITY;
+	display_buffer[ROW4 + COL3 + RED] = FULL_INTENSITY;
+	display_buffer[ROW4 + COL3 + GREEN] = FULL_INTENSITY;
+	display_buffer[ROW4 + COL3 + BLUE] = FULL_INTENSITY;
+	display_buffer[ROW4 + COL4 + RED] = FULL_INTENSITY;
+	display_buffer[ROW4 + COL4 + GREEN] = FULL_INTENSITY;
+	display_buffer[ROW4 + COL4 + BLUE] = FULL_INTENSITY;
+	display_buffer[ROW4 + COL5 + RED] = FULL_INTENSITY;
+	display_buffer[ROW4 + COL5 + GREEN] = FULL_INTENSITY;
+	display_buffer[ROW4 + COL5 + BLUE] = FULL_INTENSITY;
+	display_buffer[ROW4 + COL6 + RED] = FULL_INTENSITY;
+	display_buffer[ROW4 + COL6 + GREEN] = FULL_INTENSITY;
+	display_buffer[ROW4 + COL6 + BLUE] = FULL_INTENSITY;
+	display_buffer[ROW4 + COL7 + RED] = FULL_INTENSITY;
+	display_buffer[ROW4 + COL7 + GREEN] = FULL_INTENSITY;
+	display_buffer[ROW4 + COL7 + BLUE] = FULL_INTENSITY;
+
+	// Copy to second frame
+	memcpy(display_buffer2, display_buffer, 8 * 8 * 3);
+
+	// Finish first frame
+	display_buffer[ROW5 + COL1 + RED] = FULL_INTENSITY;
+	display_buffer[ROW5 + COL1 + GREEN] = FULL_INTENSITY;
+	display_buffer[ROW5 + COL1 + BLUE] = FULL_INTENSITY;
+	display_buffer[ROW5 + COL3 + RED] = FULL_INTENSITY;
+	display_buffer[ROW5 + COL3 + GREEN] = FULL_INTENSITY;
+	display_buffer[ROW5 + COL3 + BLUE] = FULL_INTENSITY;
+	display_buffer[ROW5 + COL4 + RED] = FULL_INTENSITY;
+	display_buffer[ROW5 + COL4 + GREEN] = FULL_INTENSITY;
+	display_buffer[ROW5 + COL4 + BLUE] = FULL_INTENSITY;
+	display_buffer[ROW5 + COL6 + RED] = FULL_INTENSITY;
+	display_buffer[ROW5 + COL6 + GREEN] = FULL_INTENSITY;
+	display_buffer[ROW5 + COL6 + BLUE] = FULL_INTENSITY;
+
+	display_buffer[ROW6 + COL0 + RED] = FULL_INTENSITY;
+	display_buffer[ROW6 + COL0 + GREEN] = FULL_INTENSITY;
+	display_buffer[ROW6 + COL0 + BLUE] = FULL_INTENSITY;
+	display_buffer[ROW6 + COL7 + RED] = FULL_INTENSITY;
+	display_buffer[ROW6 + COL7 + GREEN] = FULL_INTENSITY;
+	display_buffer[ROW6 + COL7 + BLUE] = FULL_INTENSITY;
+
+	display_buffer[ROW7 + COL1 + RED] = FULL_INTENSITY;
+	display_buffer[ROW7 + COL1 + GREEN] = FULL_INTENSITY;
+	display_buffer[ROW7 + COL1 + BLUE] = FULL_INTENSITY;
+	display_buffer[ROW7 + COL6 + RED] = FULL_INTENSITY;
+	display_buffer[ROW7 + COL6 + GREEN] = FULL_INTENSITY;
+	display_buffer[ROW7 + COL6 + BLUE] = FULL_INTENSITY;
+
+	// Finish second frame
+	display_buffer2[ROW5 + COL2 + RED] = FULL_INTENSITY;
+	display_buffer2[ROW5 + COL2 + GREEN] = FULL_INTENSITY;
+	display_buffer2[ROW5 + COL2 + BLUE] = FULL_INTENSITY;
+	display_buffer2[ROW5 + COL5 + RED] = FULL_INTENSITY;
+	display_buffer2[ROW5 + COL5 + GREEN] = FULL_INTENSITY;
+	display_buffer2[ROW5 + COL5 + BLUE] = FULL_INTENSITY;
+
+	display_buffer2[ROW6 + COL1 + RED] = FULL_INTENSITY;
+	display_buffer2[ROW6 + COL1 + GREEN] = FULL_INTENSITY;
+	display_buffer2[ROW6 + COL1 + BLUE] = FULL_INTENSITY;
+	display_buffer2[ROW6 + COL3 + RED] = FULL_INTENSITY;
+	display_buffer2[ROW6 + COL3 + GREEN] = FULL_INTENSITY;
+	display_buffer2[ROW6 + COL3 + BLUE] = FULL_INTENSITY;
+	display_buffer2[ROW6 + COL4 + RED] = FULL_INTENSITY;
+	display_buffer2[ROW6 + COL4 + GREEN] = FULL_INTENSITY;
+	display_buffer2[ROW6 + COL4 + BLUE] = FULL_INTENSITY;
+	display_buffer2[ROW6 + COL6 + RED] = FULL_INTENSITY;
+	display_buffer2[ROW6 + COL6 + GREEN] = FULL_INTENSITY;
+	display_buffer2[ROW6 + COL6 + BLUE] = FULL_INTENSITY;
+
+	display_buffer2[ROW7 + COL0 + RED] = FULL_INTENSITY;
+	display_buffer2[ROW7 + COL0 + GREEN] = FULL_INTENSITY;
+	display_buffer2[ROW7 + COL0 + BLUE] = FULL_INTENSITY;
+	display_buffer2[ROW7 + COL2 + RED] = FULL_INTENSITY;
+	display_buffer2[ROW7 + COL2 + GREEN] = FULL_INTENSITY;
+	display_buffer2[ROW7 + COL2 + BLUE] = FULL_INTENSITY;
+	display_buffer2[ROW7 + COL5 + RED] = FULL_INTENSITY;
+	display_buffer2[ROW7 + COL5 + GREEN] = FULL_INTENSITY;
+	display_buffer2[ROW7 + COL5 + BLUE] = FULL_INTENSITY;
+	display_buffer2[ROW7 + COL7 + RED] = FULL_INTENSITY;
+	display_buffer2[ROW7 + COL7 + GREEN] = FULL_INTENSITY;
+	display_buffer2[ROW7 + COL7 + BLUE] = FULL_INTENSITY;
+}
+
+void loop(void)
+{
+	// This code is invoked once each time the LEDs are scanned...
+
+	if (numFrames > 0)
+		{
+		// Hold current image for some frames
+		numFrames--;
+		return;
+		}
+	numFrames = HOLD_FRAMES;
+
+	// Go to next letter
+	if (frame >= 1)
+		frame = 0;
+	else
+		frame++;
+
+	if (frame == 0)
+		display_addr = display_buffer;
+	else
+		display_addr = display_buffer2;
+}
+
+#endif /* DEMO_H_ */

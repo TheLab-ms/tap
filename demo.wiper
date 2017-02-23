@@ -1,0 +1,1222 @@
+/*
+ * demo.wiper
+ *
+ * This demo wipes different colors into view.
+ *
+ */
+
+#ifndef DEMO_H_
+#define DEMO_H_
+
+#define	DEMO
+
+#include <stdlib.h>
+
+#define	HOLD_FRAMES	3
+
+int	numFrames;
+
+unsigned char	frame;
+unsigned char	cycles;
+unsigned char	direction;
+unsigned char	red;
+unsigned char	green;
+unsigned char	blue;
+
+#define WIDTH	8
+#define HEIGHT	8
+
+void setup(void)
+{
+	// This code is invoked once to initialize the demo...
+
+	direction = 1;
+	frame = 15;
+}
+
+void loop(void)
+{
+	// This code is invoked once each time the LEDs are scanned...
+	int	i;
+	int	j;
+
+	if (numFrames > 0)
+		{
+		// Hold current image for some frames
+		numFrames--;
+		return;
+		}
+	numFrames = HOLD_FRAMES;
+
+	frame++;
+	if (frame > 15)
+		{
+		// Next color and direction
+		frame = 0;
+		red = rand();
+		green = rand();
+		blue = rand();
+
+		direction = rand() & 7;
+//		direction++;
+//		if (direction > 7)
+//			direction = 0;
+		}
+
+	switch (direction)
+		{
+		case 0:	// Upper left to lower right
+			switch (frame)
+				{
+				case 0:
+					display_buffer[  0 +  0 + 0] = red;
+					display_buffer[  0 +  0 + 1] = green;
+					display_buffer[  0 +  0 + 2] = blue;
+					break;
+				case 1:
+					display_buffer[  0 +  3 + 0] = red;
+					display_buffer[  0 +  3 + 1] = green;
+					display_buffer[  0 +  3 + 2] = blue;
+
+					display_buffer[ 24 +  0 + 0] = red;
+					display_buffer[ 24 +  0 + 1] = green;
+					display_buffer[ 24 +  0 + 2] = blue;
+					break;
+				case 2:
+					display_buffer[  0 +  6 + 0] = red;
+					display_buffer[  0 +  6 + 1] = green;
+					display_buffer[  0 +  6 + 2] = blue;
+
+					display_buffer[ 24 +  3 + 0] = red;
+					display_buffer[ 24 +  3 + 1] = green;
+					display_buffer[ 24 +  3 + 2] = blue;
+
+					display_buffer[ 48 +  0 + 0] = red;
+					display_buffer[ 48 +  0 + 1] = green;
+					display_buffer[ 48 +  0 + 2] = blue;
+					break;
+				case 3:
+					display_buffer[  0 +  9 + 0] = red;
+					display_buffer[  0 +  9 + 1] = green;
+					display_buffer[  0 +  9 + 2] = blue;
+
+					display_buffer[ 24 +  6 + 0] = red;
+					display_buffer[ 24 +  6 + 1] = green;
+					display_buffer[ 24 +  6 + 2] = blue;
+
+					display_buffer[ 48 +  3 + 0] = red;
+					display_buffer[ 48 +  3 + 1] = green;
+					display_buffer[ 48 +  3 + 2] = blue;
+
+					display_buffer[ 72 +  0 + 0] = red;
+					display_buffer[ 72 +  0 + 1] = green;
+					display_buffer[ 72 +  0 + 2] = blue;
+					break;
+				case 4:
+					display_buffer[  0 + 12 + 0] = red;
+					display_buffer[  0 + 12 + 1] = green;
+					display_buffer[  0 + 12 + 2] = blue;
+
+					display_buffer[ 24 +  9 + 0] = red;
+					display_buffer[ 24 +  9 + 1] = green;
+					display_buffer[ 24 +  9 + 2] = blue;
+
+					display_buffer[ 48 +  6 + 0] = red;
+					display_buffer[ 48 +  6 + 1] = green;
+					display_buffer[ 48 +  6 + 2] = blue;
+
+					display_buffer[ 72 +  3 + 0] = red;
+					display_buffer[ 72 +  3 + 1] = green;
+					display_buffer[ 72 +  3 + 2] = blue;
+
+					display_buffer[ 96 +  0 + 0] = red;
+					display_buffer[ 96 +  0 + 1] = green;
+					display_buffer[ 96 +  0 + 2] = blue;
+					break;
+				case 5:
+					display_buffer[  0 + 15 + 0] = red;
+					display_buffer[  0 + 15 + 1] = green;
+					display_buffer[  0 + 15 + 2] = blue;
+
+					display_buffer[ 24 + 12 + 0] = red;
+					display_buffer[ 24 + 12 + 1] = green;
+					display_buffer[ 24 + 12 + 2] = blue;
+
+					display_buffer[ 48 +  9 + 0] = red;
+					display_buffer[ 48 +  9 + 1] = green;
+					display_buffer[ 48 +  9 + 2] = blue;
+
+					display_buffer[ 72 +  6 + 0] = red;
+					display_buffer[ 72 +  6 + 1] = green;
+					display_buffer[ 72 +  6 + 2] = blue;
+
+					display_buffer[ 96 +  3 + 0] = red;
+					display_buffer[ 96 +  3 + 1] = green;
+					display_buffer[ 96 +  3 + 2] = blue;
+
+					display_buffer[120 +  0 + 0] = red;
+					display_buffer[120 +  0 + 1] = green;
+					display_buffer[120 +  0 + 2] = blue;
+					break;
+				case 6:
+					display_buffer[  0 + 18 + 0] = red;
+					display_buffer[  0 + 18 + 1] = green;
+					display_buffer[  0 + 18 + 2] = blue;
+
+					display_buffer[ 24 + 15 + 0] = red;
+					display_buffer[ 24 + 15 + 1] = green;
+					display_buffer[ 24 + 15 + 2] = blue;
+
+					display_buffer[ 48 + 12 + 0] = red;
+					display_buffer[ 48 + 12 + 1] = green;
+					display_buffer[ 48 + 12 + 2] = blue;
+
+					display_buffer[ 72 +  9 + 0] = red;
+					display_buffer[ 72 +  9 + 1] = green;
+					display_buffer[ 72 +  9 + 2] = blue;
+
+					display_buffer[ 96 +  6 + 0] = red;
+					display_buffer[ 96 +  6 + 1] = green;
+					display_buffer[ 96 +  6 + 2] = blue;
+
+					display_buffer[120 +  3 + 0] = red;
+					display_buffer[120 +  3 + 1] = green;
+					display_buffer[120 +  3 + 2] = blue;
+
+					display_buffer[144 +  0 + 0] = red;
+					display_buffer[144 +  0 + 1] = green;
+					display_buffer[144 +  0 + 2] = blue;
+					break;
+				case 7:
+					display_buffer[  0 + 21 + 0] = red;
+					display_buffer[  0 + 21 + 1] = green;
+					display_buffer[  0 + 21 + 2] = blue;
+
+					display_buffer[ 24 + 18 + 0] = red;
+					display_buffer[ 24 + 18 + 1] = green;
+					display_buffer[ 24 + 18 + 2] = blue;
+
+					display_buffer[ 48 + 15 + 0] = red;
+					display_buffer[ 48 + 15 + 1] = green;
+					display_buffer[ 48 + 15 + 2] = blue;
+
+					display_buffer[ 72 + 12 + 0] = red;
+					display_buffer[ 72 + 12 + 1] = green;
+					display_buffer[ 72 + 12 + 2] = blue;
+
+					display_buffer[ 96 +  9 + 0] = red;
+					display_buffer[ 96 +  9 + 1] = green;
+					display_buffer[ 96 +  9 + 2] = blue;
+
+					display_buffer[120 +  6 + 0] = red;
+					display_buffer[120 +  6 + 1] = green;
+					display_buffer[120 +  6 + 2] = blue;
+
+					display_buffer[144 +  3 + 0] = red;
+					display_buffer[144 +  3 + 1] = green;
+					display_buffer[144 +  3 + 2] = blue;
+
+					display_buffer[168 +  0 + 0] = red;
+					display_buffer[168 +  0 + 1] = green;
+					display_buffer[168 +  0 + 2] = blue;
+					break;
+				case 8:
+					display_buffer[ 24 + 21 + 0] = red;
+					display_buffer[ 24 + 21 + 1] = green;
+					display_buffer[ 24 + 21 + 2] = blue;
+
+					display_buffer[ 48 + 18 + 0] = red;
+					display_buffer[ 48 + 18 + 1] = green;
+					display_buffer[ 48 + 18 + 2] = blue;
+
+					display_buffer[ 72 + 15 + 0] = red;
+					display_buffer[ 72 + 15 + 1] = green;
+					display_buffer[ 72 + 15 + 2] = blue;
+
+					display_buffer[ 96 + 12 + 0] = red;
+					display_buffer[ 96 + 12 + 1] = green;
+					display_buffer[ 96 + 12 + 2] = blue;
+
+					display_buffer[120 +  9 + 0] = red;
+					display_buffer[120 +  9 + 1] = green;
+					display_buffer[120 +  9 + 2] = blue;
+
+					display_buffer[144 +  6 + 0] = red;
+					display_buffer[144 +  6 + 1] = green;
+					display_buffer[144 +  6 + 2] = blue;
+
+					display_buffer[168 +  3 + 0] = red;
+					display_buffer[168 +  3 + 1] = green;
+					display_buffer[168 +  3 + 2] = blue;
+					break;
+				case 9:
+					display_buffer[ 48 + 21 + 0] = red;
+					display_buffer[ 48 + 21 + 1] = green;
+					display_buffer[ 48 + 21 + 2] = blue;
+
+					display_buffer[ 72 + 18 + 0] = red;
+					display_buffer[ 72 + 18 + 1] = green;
+					display_buffer[ 72 + 18 + 2] = blue;
+
+					display_buffer[ 96 + 15 + 0] = red;
+					display_buffer[ 96 + 15 + 1] = green;
+					display_buffer[ 96 + 15 + 2] = blue;
+
+					display_buffer[120 + 12 + 0] = red;
+					display_buffer[120 + 12 + 1] = green;
+					display_buffer[120 + 12 + 2] = blue;
+
+					display_buffer[144 +  9 + 0] = red;
+					display_buffer[144 +  9 + 1] = green;
+					display_buffer[144 +  9 + 2] = blue;
+
+					display_buffer[168 +  6 + 0] = red;
+					display_buffer[168 +  6 + 1] = green;
+					display_buffer[168 +  6 + 2] = blue;
+					break;
+				case 10:
+					display_buffer[ 72 + 21 + 0] = red;
+					display_buffer[ 72 + 21 + 1] = green;
+					display_buffer[ 72 + 21 + 2] = blue;
+
+					display_buffer[ 96 + 18 + 0] = red;
+					display_buffer[ 96 + 18 + 1] = green;
+					display_buffer[ 96 + 18 + 2] = blue;
+
+					display_buffer[120 + 15 + 0] = red;
+					display_buffer[120 + 15 + 1] = green;
+					display_buffer[120 + 15 + 2] = blue;
+
+					display_buffer[144 + 12 + 0] = red;
+					display_buffer[144 + 12 + 1] = green;
+					display_buffer[144 + 12 + 2] = blue;
+
+					display_buffer[168 +  9 + 0] = red;
+					display_buffer[168 +  9 + 1] = green;
+					display_buffer[168 +  9 + 2] = blue;
+					break;
+				case 11:
+					display_buffer[ 96 + 21 + 0] = red;
+					display_buffer[ 96 + 21 + 1] = green;
+					display_buffer[ 96 + 21 + 2] = blue;
+
+					display_buffer[120 + 18 + 0] = red;
+					display_buffer[120 + 18 + 1] = green;
+					display_buffer[120 + 18 + 2] = blue;
+
+					display_buffer[144 + 15 + 0] = red;
+					display_buffer[144 + 15 + 1] = green;
+					display_buffer[144 + 15 + 2] = blue;
+
+					display_buffer[168 + 12 + 0] = red;
+					display_buffer[168 + 12 + 1] = green;
+					display_buffer[168 + 12 + 2] = blue;
+					break;
+				case 12:
+					display_buffer[120 + 21 + 0] = red;
+					display_buffer[120 + 21 + 1] = green;
+					display_buffer[120 + 21 + 2] = blue;
+
+					display_buffer[144 + 18 + 0] = red;
+					display_buffer[144 + 18 + 1] = green;
+					display_buffer[144 + 18 + 2] = blue;
+
+					display_buffer[168 + 15 + 0] = red;
+					display_buffer[168 + 15 + 1] = green;
+					display_buffer[168 + 15 + 2] = blue;
+					break;
+				case 13:
+					display_buffer[144 + 21 + 0] = red;
+					display_buffer[144 + 21 + 1] = green;
+					display_buffer[144 + 21 + 2] = blue;
+
+					display_buffer[168 + 18 + 0] = red;
+					display_buffer[168 + 18 + 1] = green;
+					display_buffer[168 + 18 + 2] = blue;
+					break;
+				case 14:
+					display_buffer[168 + 21 + 0] = red;
+					display_buffer[168 + 21 + 1] = green;
+					display_buffer[168 + 21 + 2] = blue;
+					break;
+				}
+			break;
+
+		  case 1:  // Top down
+			i = frame / 2 * 24;
+			if ((frame & 1) == 0)
+				for (j = 0; j < 24; j = j + 3)
+					{
+					display_buffer[i + j + 0] = red;
+					display_buffer[i + j + 1] = green;
+					display_buffer[i + j + 2] = blue;
+					}
+			break;
+
+		  case 2:	// Upper right to lower left
+			switch (frame)
+				{
+				case 0:
+					display_buffer[  0 + 21 + 0] = red;
+					display_buffer[  0 + 21 + 1] = green;
+					display_buffer[  0 + 21 + 2] = blue;
+					break;
+				case 1:
+					display_buffer[  0 + 18 + 0] = red;
+					display_buffer[  0 + 18 + 1] = green;
+					display_buffer[  0 + 18 + 2] = blue;
+
+					display_buffer[ 24 + 21 + 0] = red;
+					display_buffer[ 24 + 21 + 1] = green;
+					display_buffer[ 24 + 21 + 2] = blue;
+					break;
+				case 2:
+					display_buffer[  0 + 15 + 0] = red;
+					display_buffer[  0 + 15 + 1] = green;
+					display_buffer[  0 + 15 + 2] = blue;
+
+					display_buffer[ 24 + 18 + 0] = red;
+					display_buffer[ 24 + 18 + 1] = green;
+					display_buffer[ 24 + 18 + 2] = blue;
+
+					display_buffer[ 48 + 21 + 0] = red;
+					display_buffer[ 48 + 21 + 1] = green;
+					display_buffer[ 48 + 21 + 2] = blue;
+					break;
+				case 3:
+					display_buffer[  0 + 12 + 0] = red;
+					display_buffer[  0 + 12 + 1] = green;
+					display_buffer[  0 + 12 + 2] = blue;
+
+					display_buffer[ 24 + 15 + 0] = red;
+					display_buffer[ 24 + 15 + 1] = green;
+					display_buffer[ 24 + 15 + 2] = blue;
+
+					display_buffer[ 48 + 18 + 0] = red;
+					display_buffer[ 48 + 18 + 1] = green;
+					display_buffer[ 48 + 18 + 2] = blue;
+
+					display_buffer[ 72 + 21 + 0] = red;
+					display_buffer[ 72 + 21 + 1] = green;
+					display_buffer[ 72 + 21 + 2] = blue;
+					break;
+				case 4:
+					display_buffer[  0 +  9 + 0] = red;
+					display_buffer[  0 +  9 + 1] = green;
+					display_buffer[  0 +  9 + 2] = blue;
+
+					display_buffer[ 24 + 12 + 0] = red;
+					display_buffer[ 24 + 12 + 1] = green;
+					display_buffer[ 24 + 12 + 2] = blue;
+
+					display_buffer[ 48 + 15 + 0] = red;
+					display_buffer[ 48 + 15 + 1] = green;
+					display_buffer[ 48 + 15 + 2] = blue;
+
+					display_buffer[ 72 + 18 + 0] = red;
+					display_buffer[ 72 + 18 + 1] = green;
+					display_buffer[ 72 + 18 + 2] = blue;
+
+					display_buffer[ 96 + 21 + 0] = red;
+					display_buffer[ 96 + 21 + 1] = green;
+					display_buffer[ 96 + 21 + 2] = blue;
+					break;
+				case 5:
+					display_buffer[  0 +  6 + 0] = red;
+					display_buffer[  0 +  6 + 1] = green;
+					display_buffer[  0 +  6 + 2] = blue;
+
+					display_buffer[ 24 +  9 + 0] = red;
+					display_buffer[ 24 +  9 + 1] = green;
+					display_buffer[ 24 +  9 + 2] = blue;
+
+					display_buffer[ 48 + 12 + 0] = red;
+					display_buffer[ 48 + 12 + 1] = green;
+					display_buffer[ 48 + 12 + 2] = blue;
+
+					display_buffer[ 72 + 15 + 0] = red;
+					display_buffer[ 72 + 15 + 1] = green;
+					display_buffer[ 72 + 15 + 2] = blue;
+
+					display_buffer[ 96 + 18 + 0] = red;
+					display_buffer[ 96 + 18 + 1] = green;
+					display_buffer[ 96 + 18 + 2] = blue;
+
+					display_buffer[120 + 21 + 0] = red;
+					display_buffer[120 + 21 + 1] = green;
+					display_buffer[120 + 21 + 2] = blue;
+					break;
+				case 6:
+					display_buffer[  0 +  3 + 0] = red;
+					display_buffer[  0 +  3 + 1] = green;
+					display_buffer[  0 +  3 + 2] = blue;
+
+					display_buffer[ 24 +  6 + 0] = red;
+					display_buffer[ 24 +  6 + 1] = green;
+					display_buffer[ 24 +  6 + 2] = blue;
+
+					display_buffer[ 48 +  9 + 0] = red;
+					display_buffer[ 48 +  9 + 1] = green;
+					display_buffer[ 48 +  9 + 2] = blue;
+
+					display_buffer[ 72 + 12 + 0] = red;
+					display_buffer[ 72 + 12 + 1] = green;
+					display_buffer[ 72 + 12 + 2] = blue;
+
+					display_buffer[ 96 + 15 + 0] = red;
+					display_buffer[ 96 + 15 + 1] = green;
+					display_buffer[ 96 + 15 + 2] = blue;
+
+					display_buffer[120 + 18 + 0] = red;
+					display_buffer[120 + 18 + 1] = green;
+					display_buffer[120 + 18 + 2] = blue;
+
+					display_buffer[144 + 21 + 0] = red;
+					display_buffer[144 + 21 + 1] = green;
+					display_buffer[144 + 21 + 2] = blue;
+					break;
+				case 7:
+					display_buffer[  0 +  0 + 0] = red;
+					display_buffer[  0 +  0 + 1] = green;
+					display_buffer[  0 +  0 + 2] = blue;
+
+					display_buffer[ 24 +  3 + 0] = red;
+					display_buffer[ 24 +  3 + 1] = green;
+					display_buffer[ 24 +  3 + 2] = blue;
+
+					display_buffer[ 48 +  6 + 0] = red;
+					display_buffer[ 48 +  6 + 1] = green;
+					display_buffer[ 48 +  6 + 2] = blue;
+
+					display_buffer[ 72 +  9 + 0] = red;
+					display_buffer[ 72 +  9 + 1] = green;
+					display_buffer[ 72 +  9 + 2] = blue;
+
+					display_buffer[ 96 + 12 + 0] = red;
+					display_buffer[ 96 + 12 + 1] = green;
+					display_buffer[ 96 + 12 + 2] = blue;
+
+					display_buffer[120 + 15 + 0] = red;
+					display_buffer[120 + 15 + 1] = green;
+					display_buffer[120 + 15 + 2] = blue;
+
+					display_buffer[144 + 18 + 0] = red;
+					display_buffer[144 + 18 + 1] = green;
+					display_buffer[144 + 18 + 2] = blue;
+
+					display_buffer[168 + 21 + 0] = red;
+					display_buffer[168 + 21 + 1] = green;
+					display_buffer[168 + 21 + 2] = blue;
+					break;
+				case 8:
+					display_buffer[ 24 +  0 + 0] = red;
+					display_buffer[ 24 +  0 + 1] = green;
+					display_buffer[ 24 +  0 + 2] = blue;
+
+					display_buffer[ 48 +  3 + 0] = red;
+					display_buffer[ 48 +  3 + 1] = green;
+					display_buffer[ 48 +  3 + 2] = blue;
+
+					display_buffer[ 72 +  6 + 0] = red;
+					display_buffer[ 72 +  6 + 1] = green;
+					display_buffer[ 72 +  6 + 2] = blue;
+
+					display_buffer[ 96 +  9 + 0] = red;
+					display_buffer[ 96 +  9 + 1] = green;
+					display_buffer[ 96 +  9 + 2] = blue;
+
+					display_buffer[120 + 12 + 0] = red;
+					display_buffer[120 + 12 + 1] = green;
+					display_buffer[120 + 12 + 2] = blue;
+
+					display_buffer[144 + 15 + 0] = red;
+					display_buffer[144 + 15 + 1] = green;
+					display_buffer[144 + 15 + 2] = blue;
+
+					display_buffer[168 + 18 + 0] = red;
+					display_buffer[168 + 18 + 1] = green;
+					display_buffer[168 + 18 + 2] = blue;
+					break;
+				case 9:
+					display_buffer[ 48 +  0 + 0] = red;
+					display_buffer[ 48 +  0 + 1] = green;
+					display_buffer[ 48 +  0 + 2] = blue;
+
+					display_buffer[ 72 +  3 + 0] = red;
+					display_buffer[ 72 +  3 + 1] = green;
+					display_buffer[ 72 +  3 + 2] = blue;
+
+					display_buffer[ 96 +  6 + 0] = red;
+					display_buffer[ 96 +  6 + 1] = green;
+					display_buffer[ 96 +  6 + 2] = blue;
+
+					display_buffer[120 +  9 + 0] = red;
+					display_buffer[120 +  9 + 1] = green;
+					display_buffer[120 +  9 + 2] = blue;
+
+					display_buffer[144 + 12 + 0] = red;
+					display_buffer[144 + 12 + 1] = green;
+					display_buffer[144 + 12 + 2] = blue;
+
+					display_buffer[168 + 15 + 0] = red;
+					display_buffer[168 + 15 + 1] = green;
+					display_buffer[168 + 15 + 2] = blue;
+					break;
+				case 10:
+					display_buffer[ 72 +  0 + 0] = red;
+					display_buffer[ 72 +  0 + 1] = green;
+					display_buffer[ 72 +  0 + 2] = blue;
+
+					display_buffer[ 96 +  3 + 0] = red;
+					display_buffer[ 96 +  3 + 1] = green;
+					display_buffer[ 96 +  3 + 2] = blue;
+
+					display_buffer[120 +  6 + 0] = red;
+					display_buffer[120 +  6 + 1] = green;
+					display_buffer[120 +  6 + 2] = blue;
+
+					display_buffer[144 +  9 + 0] = red;
+					display_buffer[144 +  9 + 1] = green;
+					display_buffer[144 +  9 + 2] = blue;
+
+					display_buffer[168 + 12 + 0] = red;
+					display_buffer[168 + 12 + 1] = green;
+					display_buffer[168 + 12 + 2] = blue;
+					break;
+				case 11:
+					display_buffer[ 96 +  0 + 0] = red;
+					display_buffer[ 96 +  0 + 1] = green;
+					display_buffer[ 96 +  0 + 2] = blue;
+
+					display_buffer[120 +  3 + 0] = red;
+					display_buffer[120 +  3 + 1] = green;
+					display_buffer[120 +  3 + 2] = blue;
+
+					display_buffer[144 +  6 + 0] = red;
+					display_buffer[144 +  6 + 1] = green;
+					display_buffer[144 +  6 + 2] = blue;
+
+					display_buffer[168 +  9 + 0] = red;
+					display_buffer[168 +  9 + 1] = green;
+					display_buffer[168 +  9 + 2] = blue;
+					break;
+				case 12:
+					display_buffer[120 +  0 + 0] = red;
+					display_buffer[120 +  0 + 1] = green;
+					display_buffer[120 +  0 + 2] = blue;
+
+					display_buffer[144 +  3 + 0] = red;
+					display_buffer[144 +  3 + 1] = green;
+					display_buffer[144 +  3 + 2] = blue;
+
+					display_buffer[168 +  6 + 0] = red;
+					display_buffer[168 +  6 + 1] = green;
+					display_buffer[168 +  6 + 2] = blue;
+					break;
+				case 13:
+					display_buffer[144 +  0 + 0] = red;
+					display_buffer[144 +  0 + 1] = green;
+					display_buffer[144 +  0 + 2] = blue;
+
+					display_buffer[168 +  3 + 0] = red;
+					display_buffer[168 +  3 + 1] = green;
+					display_buffer[168 +  3 + 2] = blue;
+					break;
+				case 14:
+					display_buffer[168 +  0 + 0] = red;
+					display_buffer[168 +  0 + 1] = green;
+					display_buffer[168 +  0 + 2] = blue;
+					break;
+				}
+			break;
+
+		case 3:  // Right to left
+			i = 21 - frame / 2 * 3;
+			if ((frame & 1) == 0)
+				for (j = 0; j < 192; j = j + 24)
+					{
+					display_buffer[j + i + 0] = red;
+					display_buffer[j + i + 1] = green;
+					display_buffer[j + i + 2] = blue;
+					}
+			break;
+
+		case 4:	// Lower right to upper left
+			switch (frame)
+				{
+				case 0:
+					display_buffer[168 + 21 + 0] = red;
+					display_buffer[168 + 21 + 1] = green;
+					display_buffer[168 + 21 + 2] = blue;
+					break;
+				case 1:
+					display_buffer[168 + 18 + 0] = red;
+					display_buffer[168 + 18 + 1] = green;
+					display_buffer[168 + 18 + 2] = blue;
+
+					display_buffer[144 + 21 + 0] = red;
+					display_buffer[144 + 21 + 1] = green;
+					display_buffer[144 + 21 + 2] = blue;
+					break;
+				case 2:
+					display_buffer[168 + 15 + 0] = red;
+					display_buffer[168 + 15 + 1] = green;
+					display_buffer[168 + 15 + 2] = blue;
+
+					display_buffer[144 + 18 + 0] = red;
+					display_buffer[144 + 18 + 1] = green;
+					display_buffer[144 + 18 + 2] = blue;
+
+					display_buffer[120 + 21 + 0] = red;
+					display_buffer[120 + 21 + 1] = green;
+					display_buffer[120 + 21 + 2] = blue;
+					break;
+				case 3:
+					display_buffer[168 + 12 + 0] = red;
+					display_buffer[168 + 12 + 1] = green;
+					display_buffer[168 + 12 + 2] = blue;
+
+					display_buffer[144 + 15 + 0] = red;
+					display_buffer[144 + 15 + 1] = green;
+					display_buffer[144 + 15 + 2] = blue;
+
+					display_buffer[120 + 18 + 0] = red;
+					display_buffer[120 + 18 + 1] = green;
+					display_buffer[120 + 18 + 2] = blue;
+
+					display_buffer[ 96 + 21 + 0] = red;
+					display_buffer[ 96 + 21 + 1] = green;
+					display_buffer[ 96 + 21 + 2] = blue;
+					break;
+				case 4:
+					display_buffer[168 +  9 + 0] = red;
+					display_buffer[168 +  9 + 1] = green;
+					display_buffer[168 +  9 + 2] = blue;
+
+					display_buffer[144 + 12 + 0] = red;
+					display_buffer[144 + 12 + 1] = green;
+					display_buffer[144 + 12 + 2] = blue;
+
+					display_buffer[120 + 15 + 0] = red;
+					display_buffer[120 + 15 + 1] = green;
+					display_buffer[120 + 15 + 2] = blue;
+
+					display_buffer[ 96 + 18 + 0] = red;
+					display_buffer[ 96 + 18 + 1] = green;
+					display_buffer[ 96 + 18 + 2] = blue;
+
+					display_buffer[ 72 + 21 + 0] = red;
+					display_buffer[ 72 + 21 + 1] = green;
+					display_buffer[ 72 + 21 + 2] = blue;
+					break;
+				case 5:
+					display_buffer[168 +  6 + 0] = red;
+					display_buffer[168 +  6 + 1] = green;
+					display_buffer[168 +  6 + 2] = blue;
+
+					display_buffer[144 +  9 + 0] = red;
+					display_buffer[144 +  9 + 1] = green;
+					display_buffer[144 +  9 + 2] = blue;
+
+					display_buffer[120 + 12 + 0] = red;
+					display_buffer[120 + 12 + 1] = green;
+					display_buffer[120 + 12 + 2] = blue;
+
+					display_buffer[ 96 + 15 + 0] = red;
+					display_buffer[ 96 + 15 + 1] = green;
+					display_buffer[ 96 + 15 + 2] = blue;
+
+					display_buffer[ 72 + 18 + 0] = red;
+					display_buffer[ 72 + 18 + 1] = green;
+					display_buffer[ 72 + 18 + 2] = blue;
+
+					display_buffer[ 48 + 21 + 0] = red;
+					display_buffer[ 48 + 21 + 1] = green;
+					display_buffer[ 48 + 21 + 2] = blue;
+					break;
+				case 6:
+					display_buffer[168 +  3 + 0] = red;
+					display_buffer[168 +  3 + 1] = green;
+					display_buffer[168 +  3 + 2] = blue;
+
+					display_buffer[144 +  6 + 0] = red;
+					display_buffer[144 +  6 + 1] = green;
+					display_buffer[144 +  6 + 2] = blue;
+
+					display_buffer[120 +  9 + 0] = red;
+					display_buffer[120 +  9 + 1] = green;
+					display_buffer[120 +  9 + 2] = blue;
+
+					display_buffer[ 96 + 12 + 0] = red;
+					display_buffer[ 96 + 12 + 1] = green;
+					display_buffer[ 96 + 12 + 2] = blue;
+
+					display_buffer[ 72 + 15 + 0] = red;
+					display_buffer[ 72 + 15 + 1] = green;
+					display_buffer[ 72 + 15 + 2] = blue;
+
+					display_buffer[ 48 + 18 + 0] = red;
+					display_buffer[ 48 + 18 + 1] = green;
+					display_buffer[ 48 + 18 + 2] = blue;
+
+					display_buffer[ 24 + 21 + 0] = red;
+					display_buffer[ 24 + 21 + 1] = green;
+					display_buffer[ 24 + 21 + 2] = blue;
+					break;
+				case 7:
+					display_buffer[168 +  0 + 0] = red;
+					display_buffer[168 +  0 + 1] = green;
+					display_buffer[168 +  0 + 2] = blue;
+
+					display_buffer[144 +  3 + 0] = red;
+					display_buffer[144 +  3 + 1] = green;
+					display_buffer[144 +  3 + 2] = blue;
+
+					display_buffer[120 +  6 + 0] = red;
+					display_buffer[120 +  6 + 1] = green;
+					display_buffer[120 +  6 + 2] = blue;
+
+					display_buffer[ 96 +  9 + 0] = red;
+					display_buffer[ 96 +  9 + 1] = green;
+					display_buffer[ 96 +  9 + 2] = blue;
+
+					display_buffer[ 72 + 12 + 0] = red;
+					display_buffer[ 72 + 12 + 1] = green;
+					display_buffer[ 72 + 12 + 2] = blue;
+
+					display_buffer[ 48 + 15 + 0] = red;
+					display_buffer[ 48 + 15 + 1] = green;
+					display_buffer[ 48 + 15 + 2] = blue;
+
+					display_buffer[ 24 + 18 + 0] = red;
+					display_buffer[ 24 + 18 + 1] = green;
+					display_buffer[ 24 + 18 + 2] = blue;
+
+					display_buffer[  0 + 21 + 0] = red;
+					display_buffer[  0 + 21 + 1] = green;
+					display_buffer[  0 + 21 + 2] = blue;
+					break;
+				case 8:
+					display_buffer[144 +  0 + 0] = red;
+					display_buffer[144 +  0 + 1] = green;
+					display_buffer[144 +  0 + 2] = blue;
+
+					display_buffer[120 +  3 + 0] = red;
+					display_buffer[120 +  3 + 1] = green;
+					display_buffer[120 +  3 + 2] = blue;
+
+					display_buffer[ 96 +  6 + 0] = red;
+					display_buffer[ 96 +  6 + 1] = green;
+					display_buffer[ 96 +  6 + 2] = blue;
+
+					display_buffer[ 72 +  9 + 0] = red;
+					display_buffer[ 72 +  9 + 1] = green;
+					display_buffer[ 72 +  9 + 2] = blue;
+
+					display_buffer[ 48 + 12 + 0] = red;
+					display_buffer[ 48 + 12 + 1] = green;
+					display_buffer[ 48 + 12 + 2] = blue;
+
+					display_buffer[ 24 + 15 + 0] = red;
+					display_buffer[ 24 + 15 + 1] = green;
+					display_buffer[ 24 + 15 + 2] = blue;
+
+					display_buffer[  0 + 18 + 0] = red;
+					display_buffer[  0 + 18 + 1] = green;
+					display_buffer[  0 + 18 + 2] = blue;
+					break;
+				case 9:
+					display_buffer[120 +  0 + 0] = red;
+					display_buffer[120 +  0 + 1] = green;
+					display_buffer[120 +  0 + 2] = blue;
+
+					display_buffer[ 96 +  3 + 0] = red;
+					display_buffer[ 96 +  3 + 1] = green;
+					display_buffer[ 96 +  3 + 2] = blue;
+
+					display_buffer[ 72 +  6 + 0] = red;
+					display_buffer[ 72 +  6 + 1] = green;
+					display_buffer[ 72 +  6 + 2] = blue;
+
+					display_buffer[ 48 +  9 + 0] = red;
+					display_buffer[ 48 +  9 + 1] = green;
+					display_buffer[ 48 +  9 + 2] = blue;
+
+					display_buffer[ 24 + 12 + 0] = red;
+					display_buffer[ 24 + 12 + 1] = green;
+					display_buffer[ 24 + 12 + 2] = blue;
+
+					display_buffer[  0 + 15 + 0] = red;
+					display_buffer[  0 + 15 + 1] = green;
+					display_buffer[  0 + 15 + 2] = blue;
+					break;
+				case 10:
+					display_buffer[ 96 +  0 + 0] = red;
+					display_buffer[ 96 +  0 + 1] = green;
+					display_buffer[ 96 +  0 + 2] = blue;
+
+					display_buffer[ 72 +  3 + 0] = red;
+					display_buffer[ 72 +  3 + 1] = green;
+					display_buffer[ 72 +  3 + 2] = blue;
+
+					display_buffer[ 48 +  6 + 0] = red;
+					display_buffer[ 48 +  6 + 1] = green;
+					display_buffer[ 48 +  6 + 2] = blue;
+
+					display_buffer[ 24 +  9 + 0] = red;
+					display_buffer[ 24 +  9 + 1] = green;
+					display_buffer[ 24 +  9 + 2] = blue;
+
+					display_buffer[  0 + 12 + 0] = red;
+					display_buffer[  0 + 12 + 1] = green;
+					display_buffer[  0 + 12 + 2] = blue;
+					break;
+				case 11:
+					display_buffer[ 72 +  0 + 0] = red;
+					display_buffer[ 72 +  0 + 1] = green;
+					display_buffer[ 72 +  0 + 2] = blue;
+
+					display_buffer[ 48 +  3 + 0] = red;
+					display_buffer[ 48 +  3 + 1] = green;
+					display_buffer[ 48 +  3 + 2] = blue;
+
+					display_buffer[ 24 +  6 + 0] = red;
+					display_buffer[ 24 +  6 + 1] = green;
+					display_buffer[ 24 +  6 + 2] = blue;
+
+					display_buffer[  0 +  9 + 0] = red;
+					display_buffer[  0 +  9 + 1] = green;
+					display_buffer[  0 +  9 + 2] = blue;
+					break;
+				case 12:
+					display_buffer[ 48 +  0 + 0] = red;
+					display_buffer[ 48 +  0 + 1] = green;
+					display_buffer[ 48 +  0 + 2] = blue;
+
+					display_buffer[ 24 +  3 + 0] = red;
+					display_buffer[ 24 +  3 + 1] = green;
+					display_buffer[ 24 +  3 + 2] = blue;
+
+					display_buffer[  0 +  6 + 0] = red;
+					display_buffer[  0 +  6 + 1] = green;
+					display_buffer[  0 +  6 + 2] = blue;
+					break;
+				case 13:
+					display_buffer[ 24 +  0 + 0] = red;
+					display_buffer[ 24 +  0 + 1] = green;
+					display_buffer[ 24 +  0 + 2] = blue;
+
+					display_buffer[  0 +  3 + 0] = red;
+					display_buffer[  0 +  3 + 1] = green;
+					display_buffer[  0 +  3 + 2] = blue;
+					break;
+				case 14:
+					display_buffer[  0 +  0 + 0] = red;
+					display_buffer[  0 +  0 + 1] = green;
+					display_buffer[  0 +  0 + 2] = blue;
+					break;
+				}
+			break;
+
+		case 5:  // Bottom up
+			i = 168 - frame / 2 * 24;
+			if ((frame & 1) == 0)
+			for (j = 0; j < 24; j = j + 3)
+				{
+					display_buffer[i + j + 0] = red;
+					display_buffer[i + j + 1] = green;
+					display_buffer[i + j + 2] = blue;
+					}
+			break;
+
+		case 6:	// Lower left to upper right
+			switch (frame)
+				{
+				case 0:
+					display_buffer[168 +  0 + 0] = red;
+					display_buffer[168 +  0 + 1] = green;
+					display_buffer[168 +  0 + 2] = blue;
+					break;
+				case 1:
+					display_buffer[168 +  3 + 0] = red;
+					display_buffer[168 +  3 + 1] = green;
+					display_buffer[168 +  3 + 2] = blue;
+
+					display_buffer[144 +  0 + 0] = red;
+					display_buffer[144 +  0 + 1] = green;
+					display_buffer[144 +  0 + 2] = blue;
+					break;
+				case 2:
+					display_buffer[168 +  6 + 0] = red;
+					display_buffer[168 +  6 + 1] = green;
+					display_buffer[168 +  6 + 2] = blue;
+
+					display_buffer[144 +  3 + 0] = red;
+					display_buffer[144 +  3 + 1] = green;
+					display_buffer[144 +  3 + 2] = blue;
+
+					display_buffer[120 +  0 + 0] = red;
+					display_buffer[120 +  0 + 1] = green;
+					display_buffer[120 +  0 + 2] = blue;
+					break;
+				case 3:
+					display_buffer[168 +  9 + 0] = red;
+					display_buffer[168 +  9 + 1] = green;
+					display_buffer[168 +  9 + 2] = blue;
+
+					display_buffer[144 +  6 + 0] = red;
+					display_buffer[144 +  6 + 1] = green;
+					display_buffer[144 +  6 + 2] = blue;
+
+					display_buffer[120 +  3 + 0] = red;
+					display_buffer[120 +  3 + 1] = green;
+					display_buffer[120 +  3 + 2] = blue;
+
+					display_buffer[ 96 +  0 + 0] = red;
+					display_buffer[ 96 +  0 + 1] = green;
+					display_buffer[ 96 +  0 + 2] = blue;
+					break;
+				case 4:
+					display_buffer[168 + 12 + 0] = red;
+					display_buffer[168 + 12 + 1] = green;
+					display_buffer[168 + 12 + 2] = blue;
+
+					display_buffer[144 +  9 + 0] = red;
+					display_buffer[144 +  9 + 1] = green;
+					display_buffer[144 +  9 + 2] = blue;
+
+					display_buffer[120 +  6 + 0] = red;
+					display_buffer[120 +  6 + 1] = green;
+					display_buffer[120 +  6 + 2] = blue;
+
+					display_buffer[ 96 +  3 + 0] = red;
+					display_buffer[ 96 +  3 + 1] = green;
+					display_buffer[ 96 +  3 + 2] = blue;
+
+					display_buffer[ 72 +  0 + 0] = red;
+					display_buffer[ 72 +  0 + 1] = green;
+					display_buffer[ 72 +  0 + 2] = blue;
+					break;
+				case 5:
+					display_buffer[168 + 15 + 0] = red;
+					display_buffer[168 + 15 + 1] = green;
+					display_buffer[168 + 15 + 2] = blue;
+
+					display_buffer[144 + 12 + 0] = red;
+					display_buffer[144 + 12 + 1] = green;
+					display_buffer[144 + 12 + 2] = blue;
+
+					display_buffer[120 +  9 + 0] = red;
+					display_buffer[120 +  9 + 1] = green;
+					display_buffer[120 +  9 + 2] = blue;
+
+					display_buffer[ 96 +  6 + 0] = red;
+					display_buffer[ 96 +  6 + 1] = green;
+					display_buffer[ 96 +  6 + 2] = blue;
+
+					display_buffer[ 72 +  3 + 0] = red;
+					display_buffer[ 72 +  3 + 1] = green;
+					display_buffer[ 72 +  3 + 2] = blue;
+
+					display_buffer[ 48 +  0 + 0] = red;
+					display_buffer[ 48 +  0 + 1] = green;
+					display_buffer[ 48 +  0 + 2] = blue;
+					break;
+				case 6:
+					display_buffer[168 + 18 + 0] = red;
+					display_buffer[168 + 18 + 1] = green;
+					display_buffer[168 + 18 + 2] = blue;
+
+					display_buffer[144 + 15 + 0] = red;
+					display_buffer[144 + 15 + 1] = green;
+					display_buffer[144 + 15 + 2] = blue;
+
+					display_buffer[120 + 12 + 0] = red;
+					display_buffer[120 + 12 + 1] = green;
+					display_buffer[120 + 12 + 2] = blue;
+
+					display_buffer[ 96 +  9 + 0] = red;
+					display_buffer[ 96 +  9 + 1] = green;
+					display_buffer[ 96 +  9 + 2] = blue;
+
+					display_buffer[ 72 +  6 + 0] = red;
+					display_buffer[ 72 +  6 + 1] = green;
+					display_buffer[ 72 +  6 + 2] = blue;
+
+					display_buffer[ 48 +  3 + 0] = red;
+					display_buffer[ 48 +  3 + 1] = green;
+					display_buffer[ 48 +  3 + 2] = blue;
+
+					display_buffer[ 24 +  0 + 0] = red;
+					display_buffer[ 24 +  0 + 1] = green;
+					display_buffer[ 24 +  0 + 2] = blue;
+					break;
+				case 7:
+					display_buffer[168 + 21 + 0] = red;
+					display_buffer[168 + 21 + 1] = green;
+					display_buffer[168 + 21 + 2] = blue;
+
+					display_buffer[144 + 18 + 0] = red;
+					display_buffer[144 + 18 + 1] = green;
+					display_buffer[144 + 18 + 2] = blue;
+
+					display_buffer[120 + 15 + 0] = red;
+					display_buffer[120 + 15 + 1] = green;
+					display_buffer[120 + 15 + 2] = blue;
+
+					display_buffer[ 96 + 12 + 0] = red;
+					display_buffer[ 96 + 12 + 1] = green;
+					display_buffer[ 96 + 12 + 2] = blue;
+
+					display_buffer[ 72 +  9 + 0] = red;
+					display_buffer[ 72 +  9 + 1] = green;
+					display_buffer[ 72 +  9 + 2] = blue;
+
+					display_buffer[ 48 +  6 + 0] = red;
+					display_buffer[ 48 +  6 + 1] = green;
+					display_buffer[ 48 +  6 + 2] = blue;
+
+					display_buffer[ 24 +  3 + 0] = red;
+					display_buffer[ 24 +  3 + 1] = green;
+					display_buffer[ 24 +  3 + 2] = blue;
+
+					display_buffer[  0 +  0 + 0] = red;
+					display_buffer[  0 +  0 + 1] = green;
+					display_buffer[  0 +  0 + 2] = blue;
+					break;
+				case 8:
+					display_buffer[144 + 21 + 0] = red;
+					display_buffer[144 + 21 + 1] = green;
+					display_buffer[144 + 21 + 2] = blue;
+
+					display_buffer[120 + 18 + 0] = red;
+					display_buffer[120 + 18 + 1] = green;
+					display_buffer[120 + 18 + 2] = blue;
+
+					display_buffer[ 96 + 15 + 0] = red;
+					display_buffer[ 96 + 15 + 1] = green;
+					display_buffer[ 96 + 15 + 2] = blue;
+
+					display_buffer[ 72 + 12 + 0] = red;
+					display_buffer[ 72 + 12 + 1] = green;
+					display_buffer[ 72 + 12 + 2] = blue;
+
+					display_buffer[ 48 +  9 + 0] = red;
+					display_buffer[ 48 +  9 + 1] = green;
+					display_buffer[ 48 +  9 + 2] = blue;
+
+					display_buffer[ 24 +  6 + 0] = red;
+					display_buffer[ 24 +  6 + 1] = green;
+					display_buffer[ 24 +  6 + 2] = blue;
+
+					display_buffer[  0 +  3 + 0] = red;
+					display_buffer[  0 +  3 + 1] = green;
+					display_buffer[  0 +  3 + 2] = blue;
+					break;
+				case 9:
+					display_buffer[120 + 21 + 0] = red;
+					display_buffer[120 + 21 + 1] = green;
+					display_buffer[120 + 21 + 2] = blue;
+
+					display_buffer[ 96 + 18 + 0] = red;
+					display_buffer[ 96 + 18 + 1] = green;
+					display_buffer[ 96 + 18 + 2] = blue;
+
+					display_buffer[ 72 + 15 + 0] = red;
+					display_buffer[ 72 + 15 + 1] = green;
+					display_buffer[ 72 + 15 + 2] = blue;
+
+					display_buffer[ 48 + 12 + 0] = red;
+					display_buffer[ 48 + 12 + 1] = green;
+					display_buffer[ 48 + 12 + 2] = blue;
+
+					display_buffer[ 24 +  9 + 0] = red;
+					display_buffer[ 24 +  9 + 1] = green;
+					display_buffer[ 24 +  9 + 2] = blue;
+
+					display_buffer[  0 +  6 + 0] = red;
+					display_buffer[  0 +  6 + 1] = green;
+					display_buffer[  0 +  6 + 2] = blue;
+					break;
+				case 10:
+					display_buffer[ 96 + 21 + 0] = red;
+					display_buffer[ 96 + 21 + 1] = green;
+					display_buffer[ 96 + 21 + 2] = blue;
+
+					display_buffer[ 72 + 18 + 0] = red;
+					display_buffer[ 72 + 18 + 1] = green;
+					display_buffer[ 72 + 18 + 2] = blue;
+
+					display_buffer[ 48 + 15 + 0] = red;
+					display_buffer[ 48 + 15 + 1] = green;
+					display_buffer[ 48 + 15 + 2] = blue;
+
+					display_buffer[ 24 + 12 + 0] = red;
+					display_buffer[ 24 + 12 + 1] = green;
+					display_buffer[ 24 + 12 + 2] = blue;
+
+					display_buffer[  0 +  9 + 0] = red;
+					display_buffer[  0 +  9 + 1] = green;
+					display_buffer[  0 +  9 + 2] = blue;
+					break;
+				case 11:
+					display_buffer[ 72 + 21 + 0] = red;
+					display_buffer[ 72 + 21 + 1] = green;
+					display_buffer[ 72 + 21 + 2] = blue;
+
+					display_buffer[ 48 + 18 + 0] = red;
+					display_buffer[ 48 + 18 + 1] = green;
+					display_buffer[ 48 + 18 + 2] = blue;
+
+					display_buffer[ 24 + 15 + 0] = red;
+					display_buffer[ 24 + 15 + 1] = green;
+					display_buffer[ 24 + 15 + 2] = blue;
+
+					display_buffer[  0 + 12 + 0] = red;
+					display_buffer[  0 + 12 + 1] = green;
+					display_buffer[  0 + 12 + 2] = blue;
+					break;
+				case 12:
+					display_buffer[ 48 + 21 + 0] = red;
+					display_buffer[ 48 + 21 + 1] = green;
+					display_buffer[ 48 + 21 + 2] = blue;
+
+					display_buffer[ 24 + 18 + 0] = red;
+					display_buffer[ 24 + 18 + 1] = green;
+					display_buffer[ 24 + 18 + 2] = blue;
+
+					display_buffer[  0 + 15 + 0] = red;
+					display_buffer[  0 + 15 + 1] = green;
+					display_buffer[  0 + 15 + 2] = blue;
+					break;
+				case 13:
+					display_buffer[ 24 + 21 + 0] = red;
+					display_buffer[ 24 + 21 + 1] = green;
+					display_buffer[ 24 + 21 + 2] = blue;
+
+					display_buffer[  0 + 18 + 0] = red;
+					display_buffer[  0 + 18 + 1] = green;
+					display_buffer[  0 + 18 + 2] = blue;
+					break;
+				case 14:
+					display_buffer[  0 + 21 + 0] = red;
+					display_buffer[  0 + 21 + 1] = green;
+					display_buffer[  0 + 21 + 2] = blue;
+					break;
+				}
+			break;
+
+		case 7:  // Left to right
+			i = frame / 2 * 3;
+			if ((frame & 1) == 0)
+				for (j = 0; j < 192; j = j + 24)
+					{
+					display_buffer[j + i + 0] = red;
+					display_buffer[j + i + 1] = green;
+					display_buffer[j + i + 2] = blue;
+					}
+			break;
+		}
+}
+
+#endif /* DEMO_H_ */

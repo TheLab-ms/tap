@@ -1,0 +1,113 @@
+/*
+ * demo.twinkle1
+ *
+ * This demo simulates a twinkling star field.
+ *
+ */
+
+#ifndef DEMO_H_
+#define DEMO_H_
+
+#define	DEMO
+
+#include <stdlib.h>
+
+#define	HOLD_FRAMES	0
+
+int	numFrames;
+
+unsigned int	index;
+unsigned char	star_intensity[8][8];
+unsigned char	star_color[8][8];
+
+void setup(void)
+{
+	// This code is invoked once to initialize the demo...
+
+	unsigned char	*intensity;
+	unsigned char	*color;
+	unsigned int	i;
+
+//	color = 0;
+	index = 0;
+
+	intensity = &star_intensity[0][0];
+	color = &star_color[0][0];
+	for (i = 0; i < 64; i++)
+		{
+		*intensity++ = (rand() % (FULL_INTENSITY - 10) + 10);
+		*color++ = (rand() % 6) + 1;
+		}
+}
+
+void loop(void)
+{
+	// This code is invoked once each time the LEDs are scanned...
+
+	unsigned char	colr;
+	unsigned char	intens;
+	unsigned char	*display_ptr;
+	unsigned char	*intensity;
+	unsigned char	*color;
+	unsigned int	i;
+
+	if (numFrames > 0)
+		{
+		// Hold current image for some frames
+		numFrames--;
+		return;
+		}
+	numFrames = HOLD_FRAMES;
+
+	display_ptr = display_buffer;
+	intensity = &star_intensity[0][0];
+	color = &star_color[0][0];
+	for (i = 0; i < 64; i++)
+		{
+		// Get current intensity
+		colr = *color;
+		if (colr & 1)
+			intens = *display_ptr;
+		else if (colr & 2)
+			intens = display_ptr[1];
+		else
+			intens = display_ptr[2];
+
+		if (colr & 0x80)
+			{
+			// Intensity decreasing
+			if (intens > 0)
+				intens--;
+			else
+				{
+				// Start increasing
+				intens++;
+				*color = *color & ~0x80;
+				}
+			}
+		else
+			{
+			// Intensity increasing
+			if (intens < *intensity)
+				intens++;
+			else
+				{
+				// Start decreasing
+				intens--;
+				*color = *color | 0x80;
+				}
+			}
+		if (colr & 1)
+			*display_ptr = intens;
+		if (colr & 2)
+			display_ptr[1] = intens;
+		if (colr & 4)
+			display_ptr[2] = intens;
+
+		display_ptr = display_ptr + 3;
+		intensity++;
+		color++;
+		}
+}
+
+#endif /* DEMO_H_ */
