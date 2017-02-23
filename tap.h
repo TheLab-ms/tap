@@ -11,6 +11,7 @@
 
 #include <tappacket.h>
 #include <tapif.h>
+#include <tapconfig.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -164,8 +165,13 @@ typedef struct binary_image
 #define	COL5G_ON	P6OUT |= BIT7
 #define	COL5G_OFF	P6OUT &= ~BIT7
 
+#ifdef LATEST_HW
+#define	COL5B_ON	P2OUT |= BIT4
+#define	COL5B_OFF	P2OUT &= ~BIT4
+#else
 #define	COL5B_ON	P6OUT |= BIT6
 #define	COL5B_OFF	P6OUT &= ~BIT6
+#endif
 
 #define	COL6R_ON	P6OUT |= BIT0
 #define	COL6R_OFF	P6OUT &= ~BIT0
